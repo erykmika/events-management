@@ -1,0 +1,8 @@
+.*
+!.gitignore
+!.env.example
+!.gitkeep
+
+
+__pycache__/
+*.pyc
