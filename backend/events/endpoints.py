@@ -1,39 +1,59 @@
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, Depends
-from sqlmodel import Session, select
-from ..db import engine
-from .models import Event
 
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
+from sqlmodel import Session, select
+
+from .models import Event
+from ..session import get_session
 
 router = APIRouter(prefix="/events", tags=["events"])
 
 
-def get_session():
-    with Session(engine) as session:
-        yield session
+class EventCreate(BaseModel):
+    title: str
+    description: str
+    date: datetime
+    location: str
+    organizer: str
+    max_participants: int | None
+    created_at: datetime = datetime.now()
+    updated_at: datetime = datetime.now()
+
+class EventRead(EventCreate):
+    id: int | None
+    title: str
+    description: str
+    date: datetime
+    location: str
+    organizer: str
+    max_participants: int | None
+    created_at: datetime
+    updated_at: datetime
 
 
-@router.get("/", response_model=list[Event])
+
+@router.get("/", response_model=list[EventRead])
 async def get_events(session: Session = Depends(get_session)):
     """Get a list of all events"""
     statement = select(Event).order_by(Event.date)
     events = session.exec(statement).all()
-    return events
+    return [EventRead(**e.model_dump()) for e in events]
 
 
-@router.get("/{event_id}", response_model=Event)
+@router.get("/{event_id}", response_model=EventRead)
 async def get_event(event_id: int, session: Session = Depends(get_session)):
     """Get an event by its ID"""
-    event = session.get(Event, event_id)
-    if not event:
+    event: Event | None = session.exec(select(Event).where(Event.id.is_(event_id))).one_or_none()  # type: ignore
+    if event is None:
         raise HTTPException(status_code=404, detail="Event not found")
-    return event
+    return EventRead(**event.model_dump())
 
 
-@router.post("/", response_model=Event)
-async def create_event(event: Event, session: Session = Depends(get_session)):
+@router.post("/", response_model=EventRead)
+async def create_event(event: EventCreate, session: Session = Depends(get_session)):
     """Create a new event"""
-    db_event = Event.from_orm(event)
+    db_event = Event(**event.model_dump())
     session.add(db_event)
     session.commit()
     session.refresh(db_event)

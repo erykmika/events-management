@@ -1,12 +1,11 @@
-from sqlmodel import SQLModel
-
-from .auth.models import *
-from .events.models import *
 from sqlmodel import create_engine
+
+from .events.models import *
 from .settings import get_settings
 
-
 settings = get_settings()
-engine = create_engine(settings.database_url)
+engine = create_engine(settings.DATABASE_URL)
 
 SQLModel.metadata.create_all(engine)
+
+

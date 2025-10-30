@@ -1,6 +1,8 @@
 import logging
+
 from backend.settings import get_settings
 from fastapi import FastAPI
+
 from .events.endpoints import router as events_router
 
 app = FastAPI()
