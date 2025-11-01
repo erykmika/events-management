@@ -7,5 +7,3 @@ settings = get_settings()
 engine = create_engine(settings.DATABASE_URL)
 
 SQLModel.metadata.create_all(engine)
-
-

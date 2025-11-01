@@ -1,4 +1,3 @@
-
 def test_create_get_list_and_get_by_id(test_client):
     client, engine = test_client
 

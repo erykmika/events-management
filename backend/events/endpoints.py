@@ -20,6 +20,7 @@ class EventCreate(BaseModel):
     created_at: datetime = datetime.now()
     updated_at: datetime = datetime.now()
 
+
 class EventRead(EventCreate):
     id: int | None
     title: str
@@ -31,6 +32,8 @@ class EventRead(EventCreate):
     created_at: datetime
     updated_at: datetime
 
+
+# todo: implement separation of concerns - db read/write and endpoints
 
 
 @router.get("/", response_model=list[EventRead])

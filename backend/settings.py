@@ -49,9 +49,7 @@ if _env_value:
                 break
 
 CURRENT_ENV: Settings = _selected_env
-CURRENT_SETTINGS: SettingsDetails = SETTINGS.get(
-    CURRENT_ENV, SETTINGS[Settings.DEVELOPMENT]
-)
+CURRENT_SETTINGS: SettingsDetails = SETTINGS.get(CURRENT_ENV, SETTINGS[Settings.DEVELOPMENT])
 
 
 def get_settings(env: Settings = Settings.DEVELOPMENT) -> SettingsDetails:

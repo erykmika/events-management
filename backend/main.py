@@ -4,6 +4,7 @@ from backend.settings import get_settings
 from fastapi import FastAPI
 
 from .events.endpoints import router as events_router
+from .reviews.endpoints import router as reviews_router
 
 app = FastAPI()
 
@@ -12,6 +13,7 @@ logging.basicConfig(level=settings.LOGGING_LEVEL)
 
 # Include routers
 app.include_router(events_router)
+app.include_router(reviews_router)
 
 
 @app.get("/")
