@@ -17,8 +17,6 @@ class EventCreate(BaseModel):
     location: str
     organizer: str
     max_participants: int | None
-    created_at: datetime = datetime.now()
-    updated_at: datetime = datetime.now()
 
 
 class EventRead(EventCreate):
@@ -29,8 +27,6 @@ class EventRead(EventCreate):
     location: str
     organizer: str
     max_participants: int | None
-    created_at: datetime
-    updated_at: datetime
 
 
 # todo: implement separation of concerns - db read/write and endpoints
