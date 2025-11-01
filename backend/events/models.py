@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
+
 from sqlmodel import SQLModel, Field, Relationship
 
 
@@ -12,4 +13,4 @@ class Event(SQLModel, table=True):
     organizer: str
     max_participants: Optional[int] = None
 
-    reviews: List["Review"] = Relationship(back_populates="event")
+    reviews: list["Review"] = Relationship(back_populates="event")  # noqa

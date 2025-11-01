@@ -10,7 +10,6 @@ from backend.session import get_session
 router = APIRouter(prefix="/reviews", tags=["reviews"])
 
 
-
 class ReviewRead(BaseModel):
     id: int
     title: str

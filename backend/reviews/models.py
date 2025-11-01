@@ -1,6 +1,8 @@
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
 
+from backend.events.models import Event
+
 
 class Review(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -9,7 +11,7 @@ class Review(SQLModel, table=True):
     rating: int = Field(ge=1, le=5)
     event_id: int = Field(foreign_key="event.id")
 
-    event: Optional["Event"] = Relationship(back_populates="reviews")
+    event: Event | None = Relationship(back_populates="reviews")
 
     assets: List["ReviewAsset"] = Relationship(back_populates="review")
 
