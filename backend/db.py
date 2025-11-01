@@ -1,6 +1,4 @@
-from sqlmodel import create_engine
-
-from .events.models import *
+from sqlmodel import create_engine, SQLModel
 from .settings import get_settings
 
 settings = get_settings()

@@ -2,7 +2,7 @@
 !.gitignore
 !.env.example
 !.gitkeep
-
+!.github
 
 __pycache__/
 *.pyc
