@@ -1,5 +1,7 @@
 import logging
 
+from starlette.middleware.cors import CORSMiddleware
+
 from backend.settings import get_settings
 from fastapi import FastAPI
 
@@ -15,6 +17,13 @@ logging.basicConfig(level=settings.LOGGING_LEVEL)
 app.include_router(events_router)
 app.include_router(reviews_router)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 async def root():
