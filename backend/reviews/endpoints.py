@@ -1,9 +1,9 @@
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, Path, HTTPException
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, HttpUrl, model_validator, field_validator
 from sqlmodel import Session, select
 
-from backend.reviews.models import Review
+from backend.reviews.models import Review, ReviewAsset
 from backend.events.models import Event
 from backend.session import get_session
 
@@ -37,6 +37,16 @@ class ReviewCreate(BaseModel):
         return self
 
 
+class ReviewAssetCreate(BaseModel):
+    url: HttpUrl
+
+
+class ReviewAssetRead(BaseModel):
+    id: int
+    url: HttpUrl
+    review_id: int
+
+
 @router.post("/", response_model=ReviewRead)
 def add_review(input_data: ReviewCreate, session: Session = Depends(get_session)):
     # Ensure the event exists
@@ -61,18 +71,49 @@ def get_review_by_id(
     review_id: Annotated[int, Path(title="The ID of the review to get")],
     session: Session = Depends(get_session),
 ):
-    review = session.exec(select(Review).where(Review.id == review_id)).one_or_none()
-    if review is None:
+    review = session.get(Review, review_id)
+    if not review:
         raise HTTPException(status_code=404, detail="Review not found")
     return review
 
 
 @router.get("/event/{event_id}", response_model=List[ReviewRead])
-def get_reviews_for_event(
-    event_id: int,
-    session: Session = Depends(get_session),
-):
+def get_reviews_for_event(event_id: int, session: Session = Depends(get_session)):
     event = session.get(Event, event_id)
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     return event.reviews
+
+
+@router.post("/{review_id}/assets", response_model=ReviewAssetRead)
+def add_review_asset(
+    review_id: int,
+    asset_data: ReviewAssetCreate,
+    session: Session = Depends(get_session),
+):
+    review = session.get(Review, review_id)
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    asset = ReviewAsset(url=str(asset_data.url), review_id=review_id)
+    session.add(asset)
+    session.commit()
+    session.refresh(asset)
+    return asset
+
+
+@router.get("/{review_id}/assets", response_model=List[ReviewAssetRead])
+def get_assets_for_review(review_id: int, session: Session = Depends(get_session)):
+    review = session.get(Review, review_id)
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    return review.assets
+
+
+@router.get("/assets/{asset_id}", response_model=ReviewAssetRead)
+def get_asset_by_id(asset_id: int, session: Session = Depends(get_session)):
+    asset = session.get(ReviewAsset, asset_id)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+    return asset
