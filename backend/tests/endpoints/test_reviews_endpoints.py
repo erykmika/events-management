@@ -12,7 +12,7 @@ def sample_event(test_client):
         "organizer": "QA Team",
         "max_participants": 50,
     }
-    response = client.post("/events/", json=event_data)
+    response = client.post("/api/events/", json=event_data)
     assert response.status_code == 200, response.text
     return response.json()
 
@@ -28,7 +28,7 @@ def test_create_and_get_reviews(test_client, sample_event):
     }
 
     # Create review
-    create_response = client.post("/reviews/", json=new_review)
+    create_response = client.post("/api/reviews/", json=new_review)
     assert create_response.status_code == 200, create_response.text
     created_review = create_response.json()
     assert created_review["title"] == new_review["title"]
@@ -38,21 +38,21 @@ def test_create_and_get_reviews(test_client, sample_event):
     review_id = created_review["id"]
 
     # List all reviews
-    list_response = client.get("/reviews/")
+    list_response = client.get("/api/reviews/")
     assert list_response.status_code == 200
     reviews = list_response.json()
     assert isinstance(reviews, list)
     assert any(r["id"] == review_id for r in reviews)
 
     # Get review by ID
-    get_response = client.get(f"/reviews/{review_id}")
+    get_response = client.get(f"/api/reviews/{review_id}")
     assert get_response.status_code == 200
     review_data = get_response.json()
     assert review_data["id"] == review_id
     assert review_data["event_id"] == sample_event["id"]
 
     # Get reviews for the event
-    by_event_response = client.get(f"/reviews/event/{sample_event['id']}")
+    by_event_response = client.get(f"/api/reviews/event/{sample_event['id']}")
     assert by_event_response.status_code == 200
     event_reviews = by_event_response.json()
     assert len(event_reviews) >= 1
@@ -69,5 +69,5 @@ def test_create_and_get_reviews(test_client, sample_event):
 )
 def test_invalid_review_creation(test_client, payload, expected_status):
     client, _ = test_client
-    response = client.post("/reviews/", json=payload)
+    response = client.post("/api/reviews/", json=payload)
     assert response.status_code == expected_status

@@ -34,7 +34,7 @@ def test_create_get_list_and_get_by_id(test_client, payload):
     client, _ = test_client
 
     # --- Create event ---
-    r = client.post("/events/", json=payload)
+    r = client.post("/api/events/", json=payload)
     assert r.status_code == 200, r.text
     created = r.json()
     assert created["id"] is not None
@@ -44,14 +44,14 @@ def test_create_get_list_and_get_by_id(test_client, payload):
     event_id = created["id"]
 
     # --- List events ---
-    r = client.get("/events/")
+    r = client.get("/api/events/")
     assert r.status_code == 200, r.text
     items = r.json()
     assert isinstance(items, list)
     assert any(item["id"] == event_id for item in items)
 
     # --- Get by ID ---
-    r = client.get(f"/events/{event_id}")
+    r = client.get(f"/api/events/{event_id}")
     assert r.status_code == 200, r.text
     item = r.json()
     assert item["id"] == event_id
