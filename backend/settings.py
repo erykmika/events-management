@@ -49,7 +49,7 @@ CURRENT_SETTINGS: SettingsDetails = SETTINGS.get(_selected_env, SETTINGS[Setting
 # optionally override db url
 _db_url_value = os.getenv(_DB_URL_VAR, None)
 if _db_url_value:
-    logger.info("Using .env-provided DB URL")
+    logger.info(f"Using .env-provided DB URL: {_db_url_value[:5]}...")
     CURRENT_SETTINGS.DATABASE_URL = _db_url_value
 
 
