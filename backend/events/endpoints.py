@@ -43,7 +43,7 @@ async def get_events(session: Session = Depends(get_session)):
 @router.get("/{event_id}", response_model=EventRead)
 async def get_event(event_id: int, session: Session = Depends(get_session)):
     """Get an event by its ID"""
-    event: Event | None = session.exec(select(Event).where(Event.id.is_(event_id))).one_or_none()  # type: ignore
+    event: Event | None = session.exec(select(Event).where(Event.id == event_id)).one_or_none()  # type: ignore
     if event is None:
         raise HTTPException(status_code=404, detail="Event not found")
     return EventRead(**event.model_dump())
