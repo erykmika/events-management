@@ -1,8 +1,13 @@
+import logging
 from enum import StrEnum, auto
+from logging import getLogger
+
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
 
+logging.basicConfig(level=logging.DEBUG)
+logger = getLogger(__name__)
 
 class Settings(StrEnum):
     DEVELOPMENT = auto()
@@ -22,35 +27,31 @@ SETTINGS = {
     ),
     Settings.PRODUCTION: SettingsDetails(
         LOGGING_LEVEL="INFO",
-        DATABASE_URL="postgresql://user:password@localhost/prod_db",
-    ),
-    Settings.TESTING: SettingsDetails(
-        LOGGING_LEVEL="DEBUG",
-        DATABASE_URL="sqlite://:memory:",
+        DATABASE_URL="", # need to pass explicitly via environment variable
     ),
 }
 
-load_dotenv()  # load variables from .env into the environment
+load_dotenv()
 
 _ENV_VAR = "ENVIRONMENT"
+_DB_URL_VAR = "DATABASE_URL"
 
 _env_value = os.getenv(_ENV_VAR, None)
 _selected_env = Settings.DEVELOPMENT
 
 if _env_value:
-    # prefer enum member name (e.g. "DEVELOPMENT", "PRODUCTION", "TESTING")
-    try:
-        _selected_env = Settings[_env_value.upper()]
-    except KeyError:
-        # fall back to matching the enum value string
-        for _s in Settings:
-            if _s.value.upper() == _env_value.upper():
-                _selected_env = _s
-                break
+    _selected_env = Settings[_env_value.upper()] # noqa
+else:
+    _selected_env = Settings.DEVELOPMENT
 
-CURRENT_ENV: Settings = _selected_env
-CURRENT_SETTINGS: SettingsDetails = SETTINGS.get(CURRENT_ENV, SETTINGS[Settings.DEVELOPMENT])
+CURRENT_SETTINGS: SettingsDetails = SETTINGS.get(_selected_env, SETTINGS[Settings.DEVELOPMENT]) # noqa
+
+# optionally override db url
+_db_url_value = os.getenv(_DB_URL_VAR, None)
+if _db_url_value:
+    logger.info("Using .env-provided DB URL")
+    CURRENT_SETTINGS.DATABASE_URL = _db_url_value
 
 
-def get_settings(env: Settings = Settings.DEVELOPMENT) -> SettingsDetails:
-    return SETTINGS.get(env, SETTINGS[Settings.DEVELOPMENT])
+def get_settings() -> SettingsDetails:
+    return CURRENT_SETTINGS
