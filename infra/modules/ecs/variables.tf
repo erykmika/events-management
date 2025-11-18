@@ -91,5 +91,25 @@ variable "ecs_task_execution_role_arn" {
 
 variable "database_url" {
   description = "Postgres RDS URL"
-  type = string
+  type        = string
+}
+
+variable "cognito_user_pool_id" {
+  description = "Cognito user pool ID"
+  type        = string
+}
+
+variable "cognito_app_client_id" {
+  description = "Cognito app client ID"
+  type        = string
+}
+
+variable "cognito_jwks_url" {
+  description = "Cognito JWKS URL"
+  type        = string
+}
+
+variable "alb_dns_name" {
+  description = "ALB DNS name"
+  type        = string
 }

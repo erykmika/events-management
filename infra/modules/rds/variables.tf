@@ -36,7 +36,7 @@ variable "db_username" {
 }
 
 variable "db_password" {
-  description = "Database master password (leave empty to auto-generate)"
+  description = "Database master password"
   type        = string
   default     = ""
   sensitive   = true

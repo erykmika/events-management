@@ -90,10 +90,10 @@ resource "aws_ecs_task_definition" "backend" {
       ]
 
       environment = [
-        {
-          name  = "DATABASE_URL"
-          value = var.database_url
-        }
+        { name = "DATABASE_URL", value = var.database_url },
+        { name = "COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id },
+        { name = "COGNITO_APP_CLIENT_ID", value = var.cognito_app_client_id },
+        { name = "COGNITO_JWKS_URL", value = var.cognito_jwks_url }
       ]
 
       logConfiguration = {
@@ -144,6 +144,14 @@ resource "aws_ecs_task_definition" "frontend" {
           protocol      = "tcp"
         }
       ]
+
+      environment = [
+        { name = "API_URL", value = "http://${var.alb_dns_name}/api" },
+        { name = "COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id },
+        { name = "COGNITO_APP_CLIENT_ID", value = var.cognito_app_client_id },
+        { name = "AWS_REGION", value = var.aws_region }
+      ]
+
 
       logConfiguration = {
         logDriver = "awslogs"

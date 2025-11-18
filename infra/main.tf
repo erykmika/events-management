@@ -3,7 +3,7 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-# VPC Module (using AWS official module)
+# VPC Module
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0"
@@ -26,7 +26,7 @@ module "vpc" {
   }
 }
 
-# ALB Module (using AWS official module)
+# ALB Module
 module "alb" {
   source  = "terraform-aws-modules/alb/aws"
   version = "~> 9.0"
@@ -101,7 +101,6 @@ module "alb" {
         matcher             = "200-399"
       }
 
-      # Don't create target group attachments - ECS will manage them
       create_attachment = false
     }
 
@@ -125,7 +124,6 @@ module "alb" {
         matcher             = "200-399"
       }
 
-      # Don't create target group attachments - ECS will manage them
       create_attachment = false
     }
   }
@@ -166,9 +164,14 @@ module "ecs" {
   desired_count_frontend = var.desired_count_frontend
 
   ecs_task_execution_role_arn = var.ecs_task_execution_role_arn
-  
-  # Pass database URL to backend
+
   database_url = module.rds.database_url
+
+  cognito_user_pool_id = module.cognito.user_pool_id
+  cognito_app_client_id = module.cognito.app_client_id
+  cognito_jwks_url      = module.cognito.jwks_url
+
+  alb_dns_name = module.alb.dns_name
 }
 
 # RDS Module
@@ -190,4 +193,11 @@ module "rds" {
 
   db_instance_class           = var.db_instance_class
   allocated_storage           = var.allocated_storage
+}
+
+module "cognito" {
+  source = "./modules/cognito"
+
+  aws_region = var.aws_region
+  project = var.project
 }
