@@ -89,3 +89,9 @@ variable "allocated_storage" {
   type        = number
   default     = 20
 }
+
+
+variable "default_user_password" {
+  description = "Default user password"
+  type = string
+}
