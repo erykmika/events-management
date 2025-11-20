@@ -6,3 +6,5 @@ alembic
 pydantic
 pytest
 ruff
+python-jose
+requests

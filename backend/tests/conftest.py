@@ -4,6 +4,7 @@ from sqlmodel import Session, SQLModel
 from starlette.testclient import TestClient
 
 import backend.session
+import backend.auth
 from backend.main import app
 
 TEST_DB_URL = "sqlite:///pytest_db.sql"
@@ -20,6 +21,7 @@ def test_client():
     # Override dependencies
     app.dependency_overrides[backend.session.get_engine] = lambda: engine
     app.dependency_overrides[backend.session.get_session] = get_test_session
+    app.dependency_overrides[backend.auth.verify_token] = lambda: True
 
     SQLModel.metadata.create_all(engine)
     client = TestClient(app)

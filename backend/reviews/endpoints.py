@@ -1,10 +1,11 @@
 from typing import Annotated, List
+
 from fastapi import APIRouter, Depends, Path, HTTPException
 from pydantic import BaseModel, HttpUrl, model_validator, field_validator
 from sqlmodel import Session, select
 
-from backend.reviews.models import Review, ReviewAsset
 from backend.events.models import Event
+from backend.reviews.models import Review, ReviewAsset
 from backend.session import get_session
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
@@ -86,11 +87,7 @@ def get_reviews_for_event(event_id: int, session: Session = Depends(get_session)
 
 
 @router.post("/{review_id}/assets", response_model=ReviewAssetRead)
-def add_review_asset(
-    review_id: int,
-    asset_data: ReviewAssetCreate,
-    session: Session = Depends(get_session),
-):
+def add_review_asset(review_id: int, asset_data: ReviewAssetCreate, session: Session = Depends(get_session)):
     review = session.get(Review, review_id)
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")

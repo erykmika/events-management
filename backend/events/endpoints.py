@@ -4,8 +4,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from .models import Event
-from ..session import get_session
+from backend.events.models import Event
+from backend.session import get_session
 
 router = APIRouter(prefix="/events", tags=["events"])
 
