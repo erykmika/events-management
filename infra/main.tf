@@ -6,7 +6,7 @@ data "aws_availability_zones" "available" {
 # VPC Module
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
+  version = "~> 6.5.1"
 
   name = "${var.project}-vpc"
   cidr = var.vpc_cidr
@@ -15,8 +15,8 @@ module "vpc" {
   public_subnets  = var.public_subnets
   private_subnets = var.private_subnets
 
-  enable_nat_gateway = true
-  single_nat_gateway = true
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
   enable_dns_hostnames = true
   enable_dns_support   = true
 
@@ -88,7 +88,7 @@ module "alb" {
       target_type                       = "ip"
       deregistration_delay              = 30
       load_balancing_cross_zone_enabled = true
-      
+
       health_check = {
         enabled             = true
         interval            = 30
@@ -111,7 +111,7 @@ module "alb" {
       target_type                       = "ip"
       deregistration_delay              = 30
       load_balancing_cross_zone_enabled = true
-      
+
       health_check = {
         enabled             = true
         interval            = 30
@@ -153,7 +153,7 @@ module "ecs" {
   vpc_id          = module.vpc.vpc_id
   private_subnets = module.vpc.private_subnets
 
-  alb_security_group_id = module.alb.security_group_id
+  alb_security_group_id     = module.alb.security_group_id
   backend_target_group_arn  = module.alb.target_groups["backend"].arn
   frontend_target_group_arn = module.alb.target_groups["frontend"].arn
 
@@ -167,7 +167,7 @@ module "ecs" {
 
   database_url = module.rds.database_url
 
-  cognito_user_pool_id = module.cognito.user_pool_id
+  cognito_user_pool_id  = module.cognito.user_pool_id
   cognito_app_client_id = module.cognito.app_client_id
   cognito_jwks_url      = module.cognito.jwks_url
 
@@ -191,13 +191,14 @@ module "rds" {
   db_username = var.db_username
   db_password = var.db_password
 
-  db_instance_class           = var.db_instance_class
-  allocated_storage           = var.allocated_storage
+  db_instance_class = var.db_instance_class
+  allocated_storage = var.allocated_storage
 }
 
 module "cognito" {
   source = "./modules/cognito"
 
-  aws_region = var.aws_region
-  project = var.project
+  aws_region            = var.aws_region
+  project               = var.project
+  default_user_password = var.default_user_password
 }

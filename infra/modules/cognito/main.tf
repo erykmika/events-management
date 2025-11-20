@@ -8,18 +8,17 @@ resource "aws_cognito_user_pool_client" "app_client" {
   generate_secret = false
 }
 
-
 resource "aws_cognito_user" "default_user" {
   user_pool_id = aws_cognito_user_pool.users.id
   username     = "defaultuser"
-  
+
   attributes = {
-    email         = "defaultuser@example.com"
-    email_verified = "true"   # mark email as confirmed
+    email          = "defaultuser@example.com"
+    email_verified = "true"
   }
 
   temporary_password = var.default_user_password
-  message_action     = "SUPPRESS" # do not send welcome email
+  message_action     = "SUPPRESS"
 }
 
 resource "null_resource" "confirm_default_user" {
@@ -27,11 +26,7 @@ resource "null_resource" "confirm_default_user" {
 
   provisioner "local-exec" {
     command = <<EOT
-  aws cognito-idp admin-set-user-password \
-  --user-pool-id ${aws_cognito_user_pool.users.id} \
-  --username defaultuser \
-  --password ${var.default_user_password}' \
-  --permanent
-  EOT
+    aws cognito-idp admin-set-user-password --user-pool-id ${aws_cognito_user_pool.users.id} --username defaultuser --password ${var.default_user_password} --permanent
+    EOT
   }
 }
