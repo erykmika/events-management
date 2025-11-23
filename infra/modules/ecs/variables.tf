@@ -84,7 +84,7 @@ variable "frontend_memory" {
   default     = "512"
 }
 
-variable "ecs_task_execution_role_arn" {
+variable "iam_execution_role_arn" {
   description = "ECS task execution role ARN"
   type        = string
 }
@@ -112,4 +112,9 @@ variable "cognito_jwks_url" {
 variable "alb_dns_name" {
   description = "ALB DNS name"
   type        = string
+}
+
+variable "s3_assets_bucket" {
+  description = "S3 assets bucket name"
+  type = string
 }

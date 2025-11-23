@@ -12,3 +12,10 @@ __pycache__/
 
 *.tfstate*
 *.tfvars*
+
+*.zip
+
+push-images.sh
+
+lambda/layer/python
+lambda/*.zip

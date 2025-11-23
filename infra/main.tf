@@ -163,7 +163,7 @@ module "ecs" {
   desired_count_backend  = var.desired_count_backend
   desired_count_frontend = var.desired_count_frontend
 
-  ecs_task_execution_role_arn = var.ecs_task_execution_role_arn
+  iam_execution_role_arn = var.iam_role_arn
 
   database_url = module.rds.database_url
 
@@ -172,6 +172,8 @@ module "ecs" {
   cognito_jwks_url      = module.cognito.jwks_url
 
   alb_dns_name = module.alb.dns_name
+
+  s3_assets_bucket = module.s3.assets_bucket_name
 }
 
 # RDS Module
@@ -201,4 +203,14 @@ module "cognito" {
   aws_region            = var.aws_region
   project               = var.project
   default_user_password = var.default_user_password
+}
+
+module "s3" {
+  source = "./modules/lambda_s3"
+  project = var.project
+  iam_role_arn = var.iam_role_arn
+  account_id = var.account_id
+  aws_region = var.aws_region
+
+  image_uri = "${module.ecr.lambda_repository_arn}:latest"
 }

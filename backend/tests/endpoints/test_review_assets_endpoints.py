@@ -1,4 +1,9 @@
+from io import BytesIO
+from unittest.mock import Mock
+
 import pytest
+
+from backend.reviews import endpoints as review_endpoints
 
 
 @pytest.fixture
@@ -37,13 +42,18 @@ def test_add_and_get_review_asset(test_client, event_and_review):
     client, _ = test_client
     _, review = event_and_review
 
+    review_endpoints.s3.upload_fileobj = Mock()
+    review_endpoints.generate_presigned_url = Mock(return_value="xyz")
     # Create asset
-    asset_payload = {"url": "https://example.com/photo1.jpg"}
-    create_resp = client.post(f"/api/reviews/{review['id']}/assets", json=asset_payload)
+    create_resp = client.post(
+        f"/api/reviews/{review['id']}/assets",
+        files=[
+            ("asset_data", ("file1.txt", BytesIO(b"aaa"))),
+        ],
+    )
     assert create_resp.status_code == 200, create_resp.text
 
     created_asset = create_resp.json()
-    assert created_asset["url"] == asset_payload["url"]
     assert created_asset["review_id"] == review["id"]
     assert "id" in created_asset
 
@@ -54,7 +64,6 @@ def test_add_and_get_review_asset(test_client, event_and_review):
     assert get_resp.status_code == 200, get_resp.text
     fetched = get_resp.json()
     assert fetched["id"] == asset_id
-    assert fetched["url"] == asset_payload["url"]
 
     # Get all assets for review
     list_resp = client.get(f"/api/reviews/{review['id']}/assets")
@@ -66,8 +75,14 @@ def test_add_and_get_review_asset(test_client, event_and_review):
 
 def test_add_asset_to_nonexistent_review(test_client):
     client, _ = test_client
-    payload = {"url": "https://example.com/ghost.jpg"}
-    resp = client.post("/api/reviews/9999/assets", json=payload)
+    review_endpoints.s3.upload_fileobj = Mock()
+    review_endpoints.generate_presigned_url = Mock(return_value="xyz")
+    resp = client.post(
+        "/api/reviews/9999/assets",
+        files=[
+            ("asset_data", ("file1.txt", BytesIO(b"aaa"))),
+        ],
+    )
     assert resp.status_code == 404
     assert resp.json()["detail"] == "Review not found"
 

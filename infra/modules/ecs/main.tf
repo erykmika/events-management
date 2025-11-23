@@ -73,8 +73,8 @@ resource "aws_ecs_task_definition" "backend" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.backend_cpu
   memory                   = var.backend_memory
-  execution_role_arn       = var.ecs_task_execution_role_arn
-  task_role_arn            = var.ecs_task_execution_role_arn
+  execution_role_arn       = var.iam_execution_role_arn
+  task_role_arn            = var.iam_execution_role_arn
 
   container_definitions = jsonencode([
     {
@@ -93,7 +93,8 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "DATABASE_URL", value = var.database_url },
         { name = "COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id },
         { name = "COGNITO_APP_CLIENT_ID", value = var.cognito_app_client_id },
-        { name = "COGNITO_JWKS_URL", value = var.cognito_jwks_url }
+        { name = "COGNITO_JWKS_URL", value = var.cognito_jwks_url },
+        { name = "S3_ASSETS_BUCKET", value = var.s3_assets_bucket }
       ]
 
       logConfiguration = {
@@ -129,8 +130,8 @@ resource "aws_ecs_task_definition" "frontend" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.frontend_cpu
   memory                   = var.frontend_memory
-  execution_role_arn       = var.ecs_task_execution_role_arn
-  task_role_arn            = var.ecs_task_execution_role_arn
+  execution_role_arn       = var.iam_execution_role_arn
+  task_role_arn            = var.iam_execution_role_arn
 
   container_definitions = jsonencode([
     {

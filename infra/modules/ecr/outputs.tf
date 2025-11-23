@@ -17,3 +17,8 @@ output "backend_repository_arn" {
   description = "Backend ECR repository ARN"
   value       = aws_ecr_repository.backend.arn
 }
+
+output "lambda_repository_arn" {
+  description = "Lambda ECR repository ARN"
+  value       = aws_ecr_repository.process_images.arn
+}

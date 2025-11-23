@@ -52,10 +52,10 @@ variable "desired_count_frontend" {
   default     = 1
 }
 
-variable "ecs_task_execution_role_arn" {
-  description = "ARN of the ECS task execution role"
+variable "iam_role_arn" {
+  description = "ARN of the IAM role"
   type        = string
-  default     = "arn:aws:iam::ACCOUNT_ID:role/LabRole"  # Update with your account ID or use data source
+  default     = "arn:aws:iam::ACCOUNT_ID:role/LabRole"
 }
 
 # RDS Variables
@@ -93,5 +93,11 @@ variable "allocated_storage" {
 
 variable "default_user_password" {
   description = "Default user password"
+  type = string
+  sensitive = true
+}
+
+variable "account_id" {
+  description = "AWS account ID"
   type = string
 }

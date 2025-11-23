@@ -1,57 +1,77 @@
 import { useState } from "react";
 import { createReview } from "../api";
+import { uploadReviewAsset } from "../api";
 
 export default function CreateReviewForm({ eventId, onReviewCreated }) {
-  const [form, setForm] = useState({ title: "", content: "", rating: 5 });
-  const [error, setError] = useState(null);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [rating, setRating] = useState(5);
+  const [file, setFile] = useState(null);
 
-  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const handleSubmit = async e => {
+  const submit = async (e) => {
     e.preventDefault();
+
     try {
-      await createReview({ ...form, rating: Number(form.rating), event_id: eventId });
-      setForm({ title: "", content: "", rating: 5 });
-      onReviewCreated?.();
+      const review = await createReview({
+        title,
+        content,
+        rating,
+        event_id: eventId,
+      });
+
+      if (file) {
+        await uploadReviewAsset(review.id, file);
+      }
+
+      onReviewCreated();
+      setTitle("");
+      setContent("");
+      setRating(5);
+      setFile(null);
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      alert("Error creating review");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border rounded p-4 mt-6 space-y-3">
-      <h3 className="text-lg font-semibold">Leave a Review</h3>
-      {error && <p className="text-red-600">{error}</p>}
+    <form onSubmit={submit} className="space-y-2 border p-4 rounded">
+      <h3 className="font-semibold text-lg">Add a Review</h3>
+
       <input
-        name="title"
-        value={form.title}
-        onChange={handleChange}
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
         placeholder="Title"
-        className="border w-full p-2 rounded"
-        required
+        className="border p-2 rounded w-full"
       />
+
       <textarea
-        name="content"
-        value={form.content}
-        onChange={handleChange}
-        placeholder="Your thoughts..."
-        className="border w-full p-2 rounded"
-        required
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="Your review"
+        className="border p-2 rounded w-full"
       />
+
       <select
-        name="rating"
-        value={form.rating}
-        onChange={handleChange}
-        className="border w-full p-2 rounded"
+        value={rating}
+        onChange={(e) => setRating(Number(e.target.value))}
+        className="border p-2 rounded"
       >
-        {[1, 2, 3, 4, 5].map(r => (
-          <option key={r} value={r}>{r}</option>
+        {[1, 2, 3, 4, 5].map((r) => (
+          <option key={r} value={r}>
+            {r} Stars
+          </option>
         ))}
       </select>
-      <button
-        type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
+
+      <input
+        type="file"
+        onChange={(e) => setFile(e.target.files[0])}
+        accept="image/*"
+        className="block"
+      />
+
+      <button className="bg-blue-600 text-white py-2 px-4 rounded">
         Submit Review
       </button>
     </form>

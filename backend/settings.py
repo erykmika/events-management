@@ -22,6 +22,7 @@ class SettingsDetails(BaseModel):
     COGNITO_USER_POOL_ID: str = ""
     COGNITO_APP_CLIENT_ID: str = ""
     COGNITO_JWKS_URL: str = ""
+    S3_ASSETS_BUCKET: str = ""
 
 
 SETTINGS = {
@@ -40,7 +41,7 @@ load_dotenv()
 _ENV_VAR = "ENVIRONMENT"
 _DB_URL_VAR = "DATABASE_URL"
 
-_env_value = os.getenv(_ENV_VAR, None)
+_env_value = os.getenv(_ENV_VAR)
 _selected_env = Settings.DEVELOPMENT
 
 if _env_value:
@@ -50,20 +51,12 @@ else:
 
 CURRENT_SETTINGS: SettingsDetails = SETTINGS.get(_selected_env, SETTINGS[Settings.DEVELOPMENT])  # noqa
 
-# optionally override db url
-_db_url_value = os.getenv(_DB_URL_VAR, None)
-if _db_url_value:
-    logger.info(f"Using .env-provided DB URL: {_db_url_value[:5]}...")
-    CURRENT_SETTINGS.DATABASE_URL = _db_url_value
-
-# override cognito environment vars
-for cognito_setting in ("COGNITO_USER_POOL_ID", "COGNITO_APP_CLIENT_ID", "COGNITO_JWKS_URL"):
-    _env_value = os.getenv(cognito_setting, None)
-    if _env_value is not None:
-        logger.info(f"Using .env-provided value of {cognito_setting}: {_env_value}")
-        setattr(CURRENT_SETTINGS, cognito_setting, _env_value)
-    else:
-        logger.info(f"{cognito_setting} not given in .env")
+# optionally override `CURRENT_SETTINGS` attributes with the values given in env
+for setting in CURRENT_SETTINGS.model_dump().keys():
+    env_value = os.getenv(setting)
+    if env_value is not None:
+        logger.info(f"Using env-provided value of {setting}={env_value}")
+        setattr(CURRENT_SETTINGS, setting, env_value)
 
 
 def get_settings() -> SettingsDetails:

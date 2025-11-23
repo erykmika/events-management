@@ -18,7 +18,7 @@ class Review(SQLModel, table=True):
 
 class ReviewAsset(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    url: str = Field(..., description="External resource link for this review (e.g. image, video, document)")
+    url: str = Field(..., description="External resource link for this review")
     review_id: int = Field(foreign_key="review.id")
 
     review: Optional[Review] = Relationship(back_populates="assets")
