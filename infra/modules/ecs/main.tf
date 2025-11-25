@@ -2,11 +2,6 @@
 resource "aws_ecs_cluster" "main" {
   name = "${var.project}-cluster"
 
-  setting {
-    name  = "containerInsights"
-    value = "enabled"
-  }
-
   tags = {
     Name        = "${var.project}-cluster"
     Project     = var.project
@@ -18,23 +13,11 @@ resource "aws_ecs_cluster" "main" {
 resource "aws_cloudwatch_log_group" "backend" {
   name              = "/ecs/${var.project}-backend"
   retention_in_days = 7
-
-  tags = {
-    Name        = "${var.project}-backend-logs"
-    Project     = var.project
-    Environment = var.environment
-  }
 }
 
 resource "aws_cloudwatch_log_group" "frontend" {
   name              = "/ecs/${var.project}-frontend"
   retention_in_days = 7
-
-  tags = {
-    Name        = "${var.project}-frontend-logs"
-    Project     = var.project
-    Environment = var.environment
-  }
 }
 
 # Security Group for ECS Tasks
@@ -57,12 +40,6 @@ resource "aws_security_group" "ecs_tasks" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name        = "${var.project}-ecs-tasks-sg"
-    Project     = var.project
-    Environment = var.environment
   }
 }
 
@@ -115,12 +92,6 @@ resource "aws_ecs_task_definition" "backend" {
       }
     }
   ])
-
-  tags = {
-    Name        = "${var.project}-backend-task"
-    Project     = var.project
-    Environment = var.environment
-  }
 }
 
 # Frontend Task Definition
@@ -199,17 +170,6 @@ resource "aws_ecs_service" "backend" {
     container_name   = "backend"
     container_port   = 8000
   }
-
-  deployment_circuit_breaker {
-    enable   = true
-    rollback = true
-  }
-
-  tags = {
-    Name        = "${var.project}-backend-svc"
-    Project     = var.project
-    Environment = var.environment
-  }
 }
 
 # Frontend ECS Service
@@ -230,16 +190,5 @@ resource "aws_ecs_service" "frontend" {
     target_group_arn = var.frontend_target_group_arn
     container_name   = "frontend"
     container_port   = 80
-  }
-
-  deployment_circuit_breaker {
-    enable   = true
-    rollback = true
-  }
-
-  tags = {
-    Name        = "${var.project}-frontend-svc"
-    Project     = var.project
-    Environment = var.environment
   }
 }

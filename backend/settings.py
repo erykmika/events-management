@@ -55,7 +55,7 @@ CURRENT_SETTINGS: SettingsDetails = SETTINGS.get(_selected_env, SETTINGS[Setting
 for setting in CURRENT_SETTINGS.model_dump().keys():
     env_value = os.getenv(setting)
     if env_value is not None:
-        logger.info(f"Using env-provided value of {setting}={env_value}")
+        logger.info(f"Using env-provided value of {setting}={str(env_value)[:5]}***{str(env_value)[-5:]}")
         setattr(CURRENT_SETTINGS, setting, env_value)
 
 
