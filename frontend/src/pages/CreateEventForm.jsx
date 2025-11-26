@@ -27,74 +27,72 @@ export default function CreateEventForm() {
         max_participants: Number(form.max_participants) || null,
       };
       await createEvent(eventData);
-      navigate("/"); // go back to events list
+      navigate("/");
     } catch (err) {
       setError(err.message);
     }
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Create New Event</h1>
-      {error && <p className="text-red-600 mb-2">{error}</p>}
+    <div className="w-screen h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4 overflow-auto">
+      <div className="w-full max-w-xl flex flex-col space-y-6">
 
-      <form onSubmit={handleSubmit} className="space-y-3 border rounded p-4 shadow-sm">
-        <input
-          name="title"
-          value={form.title}
-          onChange={handleChange}
-          placeholder="Event Title"
-          required
-          className="border p-2 rounded w-full"
-        />
-        <textarea
-          name="description"
-          value={form.description}
-          onChange={handleChange}
-          placeholder="Event Description"
-          required
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="date"
-          type="datetime-local"
-          value={form.date}
-          onChange={handleChange}
-          required
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="location"
-          value={form.location}
-          onChange={handleChange}
-          placeholder="Location"
-          required
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="organizer"
-          value={form.organizer}
-          onChange={handleChange}
-          placeholder="Organizer"
-          required
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="max_participants"
-          type="number"
-          value={form.max_participants}
-          onChange={handleChange}
-          placeholder="Max Participants (optional)"
-          className="border p-2 rounded w-full"
-        />
+        <h1 className="text-3xl font-bold text-center text-gray-800">
+          Create a New Event
+        </h1>
 
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        {error && (
+          <p className="text-red-600 text-center bg-red-100 p-2 rounded-lg text-sm">
+            {error}
+          </p>
+        )}
+
+        <form
+          onSubmit={handleSubmit}
+          className="overflow-y-hidden space-y-1.5 bg-white/70 backdrop-blur-xl border border-gray-200 shadow-lg rounded-2xl p-6 max-h-[90vh]"
         >
-          Create Event
-        </button>
-      </form>
+          {[
+            { name: "title", label: "Event Title", type: "text" },
+            { name: "description", label: "Event Description", type: "textarea" },
+            { name: "date", label: "Date & Time", type: "datetime-local" },
+            { name: "location", label: "Location", type: "text" },
+            { name: "organizer", label: "Organizer", type: "text" },
+            { name: "max_participants", label: "Max Participants (Optional)", type: "number" },
+          ].map(({ name, label, type }) => (
+            <div key={name}>
+              <label className="block mb-1 font-medium text-gray-700 text-sm">
+                {label}
+              </label>
+
+              {type === "textarea" ? (
+                <textarea
+                  name={name}
+                  value={form[name]}
+                  onChange={handleChange}
+                  required={name !== "max_participants"}
+                  className="border border-gray-300 p-3 rounded-lg w-full h-24 text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all bg-white"
+                />
+              ) : (
+                <input
+                  name={name}
+                  type={type}
+                  value={form[name]}
+                  onChange={handleChange}
+                  required={name !== "max_participants"}
+                  className="border border-gray-300 p-3 rounded-lg w-full text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all bg-white"
+                />
+              )}
+            </div>
+          ))}
+
+          <button
+            type="submit"
+            className="w-full py-3 rounded-lg text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md transition-all"
+          >
+            Create Event
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
