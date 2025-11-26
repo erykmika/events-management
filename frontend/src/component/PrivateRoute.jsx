@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, {useContext, useEffect, useState} from "react";
 import { Navigate } from "react-router-dom";
 import { fetchAuthSession } from "aws-amplify/auth";
+import {AuthContext} from "../AuthContext.js";
 
 export default function PrivateRoute({ children }) {
+    const { authenticated, setAuthenticated } = useContext(AuthContext);
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -16,6 +18,7 @@ export default function PrivateRoute({ children }) {
                         session.tokens.idToken.toString()
                     );
                     setIsAuthenticated(true);
+                    setAuthenticated(true);
                 }
             } catch (err) {
                 console.error("Not authenticated", err);

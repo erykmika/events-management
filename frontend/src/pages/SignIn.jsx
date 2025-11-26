@@ -11,7 +11,6 @@ export default function SignIn() {
         e.preventDefault();
         try {
             await signIn({ username: user, password });
-
             const session = await fetchAuthSession();
             localStorage.setItem("id_token", session.tokens.idToken.toString());
 
