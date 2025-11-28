@@ -19,11 +19,6 @@ module "vpc" {
   single_nat_gateway   = true
   enable_dns_hostnames = true
   enable_dns_support   = true
-
-  tags = {
-    Project     = var.project
-    Environment = var.environment
-  }
 }
 
 # ALB Module
@@ -126,11 +121,6 @@ module "alb" {
 
       create_attachment = false
     }
-  }
-
-  tags = {
-    Project     = var.project
-    Environment = var.environment
   }
 }
 

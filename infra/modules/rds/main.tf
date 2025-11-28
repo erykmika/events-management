@@ -2,12 +2,6 @@
 resource "aws_db_subnet_group" "main" {
   name       = "${var.project}-db-subnet-group"
   subnet_ids = var.private_subnets
-
-  tags = {
-    Name        = "${var.project}-db-subnet-group"
-    Project     = var.project
-    Environment = var.environment
-  }
 }
 
 # Security Group for RDS
@@ -31,12 +25,6 @@ resource "aws_security_group" "rds" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = {
-    Name        = "${var.project}-rds-sg"
-    Project     = var.project
-    Environment = var.environment
-  }
 }
 
 # RDS PostgreSQL Instance
@@ -59,10 +47,4 @@ resource "aws_db_instance" "main" {
   publicly_accessible    = false
 
   skip_final_snapshot = true
-
-  tags = {
-    Name        = "${var.project}-db"
-    Project     = var.project
-    Environment = var.environment
-  }
 }

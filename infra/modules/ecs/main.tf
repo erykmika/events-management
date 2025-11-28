@@ -1,12 +1,6 @@
 # ECS Cluster
 resource "aws_ecs_cluster" "main" {
   name = "${var.project}-cluster"
-
-  tags = {
-    Name        = "${var.project}-cluster"
-    Project     = var.project
-    Environment = var.environment
-  }
 }
 
 # CloudWatch Log Groups
@@ -143,12 +137,6 @@ resource "aws_ecs_task_definition" "frontend" {
       }
     }
   ])
-
-  tags = {
-    Name        = "${var.project}-frontend-task"
-    Project     = var.project
-    Environment = var.environment
-  }
 }
 
 # Backend ECS Service
