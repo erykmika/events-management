@@ -1,8 +1,3 @@
-# Data source for availability zones
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
 # VPC Module
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
@@ -127,9 +122,7 @@ module "alb" {
 # ECR Module
 module "ecr" {
   source = "./modules/ecr"
-
   project     = var.project
-  environment = var.environment
 }
 
 # ECS Module
@@ -176,7 +169,7 @@ module "rds" {
   vpc_id          = module.vpc.vpc_id
   private_subnets = module.vpc.private_subnets
 
-  # Reference the security group created by ECS module
+  # Reference ECS SG
   ecs_tasks_security_group_id = module.ecs.ecs_tasks_security_group_id
 
   db_name     = var.db_name
@@ -199,8 +192,4 @@ module "s3" {
   source = "./modules/lambda_s3"
   project = var.project
   iam_role_arn = var.iam_role_arn
-  account_id = var.account_id
-  aws_region = var.aws_region
-
-  image_uri = "${module.ecr.lambda_repository_arn}:latest"
 }

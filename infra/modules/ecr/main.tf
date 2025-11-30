@@ -9,7 +9,3 @@ resource "aws_ecr_repository" "backend" {
   image_tag_mutability = "MUTABLE"
   force_delete         = true
 }
-
-resource "aws_ecr_repository" "process_images" {
-  name = "${var.project}-process-images"
-}

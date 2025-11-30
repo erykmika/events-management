@@ -14,7 +14,7 @@ resource "aws_cloudwatch_log_group" "frontend" {
   retention_in_days = 7
 }
 
-# Security Group for ECS Tasks
+# SG for ECS Tasks
 resource "aws_security_group" "ecs_tasks" {
   name        = "${var.project}-ecs-tasks-sg"
   description = "Security group for ECS tasks"
