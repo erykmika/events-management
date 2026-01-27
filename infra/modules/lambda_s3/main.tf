@@ -1,16 +1,3 @@
-resource "aws_s3_bucket" "review_assets" {
-  bucket        = "${var.project}-uploads"
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_public_access_block" "uploads_block" {
-  bucket                  = aws_s3_bucket.review_assets.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
 resource "aws_lambda_layer_version" "python_libs" {
   layer_name  = "${var.project}-python-libs"
   filename    = "${path.root}/../lambda/layer/layer.zip"

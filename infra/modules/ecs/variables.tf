@@ -114,7 +114,17 @@ variable "alb_dns_name" {
   type        = string
 }
 
-variable "s3_assets_bucket" {
-  description = "S3 assets bucket name"
+variable "minio_target_group_arn" {
+  description = "MinIO target group ARN"
+  type        = string
+}
+
+variable "minio_access_key" {
+  description = "Minio access key"
+  type = string
+}
+
+variable "minio_secret_access_key" {
+  description = "Minio secret access key"
   type = string
 }

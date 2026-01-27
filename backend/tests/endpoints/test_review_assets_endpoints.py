@@ -3,6 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
+import backend.s3
 from backend.reviews import endpoints as review_endpoints
 
 
@@ -42,8 +43,8 @@ def test_add_and_get_review_asset(test_client, event_and_review):
     client, _ = test_client
     _, review = event_and_review
 
-    review_endpoints.s3.upload_fileobj = Mock()
-    review_endpoints.generate_presigned_url = Mock(return_value="xyz")
+    backend.s3.s3.upload_fileobj = Mock()
+    backend.s3.generate_presigned_url = Mock(return_value="xyz")
     # Create asset
     create_resp = client.post(
         f"/api/reviews/{review['id']}/assets",
@@ -75,8 +76,8 @@ def test_add_and_get_review_asset(test_client, event_and_review):
 
 def test_add_asset_to_nonexistent_review(test_client):
     client, _ = test_client
-    review_endpoints.s3.upload_fileobj = Mock()
-    review_endpoints.generate_presigned_url = Mock(return_value="xyz")
+    backend.s3.s3.upload_fileobj = Mock()
+    backend.s3.generate_presigned_url = Mock(return_value="xyz")
     resp = client.post(
         "/api/reviews/9999/assets",
         files=[

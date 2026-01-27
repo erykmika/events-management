@@ -101,3 +101,15 @@ variable "account_id" {
   description = "AWS account ID"
   type = string
 }
+
+variable "minio_access_key" {
+  description = "Minio access key"
+  type = string
+  default = "minioadmin"
+}
+
+variable "minio_secret_access_key" {
+  description = "Minio secret access key"
+  type = string
+  default = "minioadmin"
+}

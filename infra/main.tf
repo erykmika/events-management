@@ -36,6 +36,12 @@ module "alb" {
       ip_protocol = "tcp"
       cidr_ipv4   = "0.0.0.0/0"
     }
+    all_minio = {
+      from_port   = 9000
+      to_port     = 9000
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
   }
   security_group_egress_rules = {
     all = {
@@ -66,6 +72,14 @@ module "alb" {
             }
           }]
         }
+      }
+    }
+    minio = {
+      port     = 9000
+      protocol = "HTTP"
+
+      forward = {
+        target_group_key = "minio"
       }
     }
   }
@@ -116,6 +130,29 @@ module "alb" {
 
       create_attachment = false
     }
+
+    minio = {
+      name_prefix                       = "mi-"
+      protocol                          = "HTTP"
+      port                              = 9000
+      target_type                       = "ip"
+      deregistration_delay              = 30
+      load_balancing_cross_zone_enabled = true
+
+      health_check = {
+        enabled             = true
+        interval            = 30
+        path                = "/minio/health/ready"
+        port                = "traffic-port"
+        healthy_threshold   = 3
+        unhealthy_threshold = 3
+        timeout             = 5
+        protocol            = "HTTP"
+        matcher             = "200-399"
+      }
+
+      create_attachment = false
+    }
   }
 }
 
@@ -156,7 +193,10 @@ module "ecs" {
 
   alb_dns_name = module.alb.dns_name
 
-  s3_assets_bucket = module.s3.assets_bucket_name
+  minio_target_group_arn = module.alb.target_groups["minio"].arn
+
+  minio_access_key = var.minio_access_key
+  minio_secret_access_key = var.minio_secret_access_key
 }
 
 # RDS Module
@@ -186,10 +226,4 @@ module "cognito" {
   aws_region            = var.aws_region
   project               = var.project
   default_user_password = var.default_user_password
-}
-
-module "s3" {
-  source = "./modules/lambda_s3"
-  project = var.project
-  iam_role_arn = var.iam_role_arn
 }

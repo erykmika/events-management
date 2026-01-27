@@ -5,10 +5,13 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-COPY . backend/
-
 RUN pip install --upgrade pip
+
+COPY requirements.txt backend/requirements.txt
+
 RUN pip install --no-cache-dir -r backend/requirements.txt
+
+COPY . backend/
 
 ENV PYTHONPATH=/app
 

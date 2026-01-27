@@ -14,6 +14,11 @@ resource "aws_cloudwatch_log_group" "frontend" {
   retention_in_days = 7
 }
 
+resource "aws_cloudwatch_log_group" "minio" {
+  name              = "/ecs/${var.project}-minio"
+  retention_in_days = 7
+}
+
 # SG for ECS Tasks
 resource "aws_security_group" "ecs_tasks" {
   name        = "${var.project}-ecs-tasks-sg"
@@ -65,7 +70,11 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id },
         { name = "COGNITO_APP_CLIENT_ID", value = var.cognito_app_client_id },
         { name = "COGNITO_JWKS_URL", value = var.cognito_jwks_url },
-        { name = "S3_ASSETS_BUCKET", value = var.s3_assets_bucket }
+        { name = "S3_ASSETS_BUCKET", value = "eventsassets" },
+        { name = "MINIO_ENDPOINT", value = "${var.alb_dns_name}:9000" },
+        { name = "MINIO_ACCESS_KEY", value = var.minio_access_key },
+        { name = "MINIO_SECRET_ACCESS_KEY", value = var.minio_secret_access_key },
+        { name = "AWS_REGION", value = var.aws_region },
       ]
 
       logConfiguration = {
@@ -139,6 +148,55 @@ resource "aws_ecs_task_definition" "frontend" {
   ])
 }
 
+# MinIO Task Definition
+resource "aws_ecs_task_definition" "minio" {
+  family                   = "${var.project}-minio"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "512"
+  memory                   = "1024"
+  execution_role_arn       = var.iam_execution_role_arn
+  task_role_arn            = var.iam_execution_role_arn
+
+  container_definitions = jsonencode([
+    {
+      name  = "minio"
+      image = "minio/minio:latest"
+      essential = true
+
+      command = ["minio", "server", "/data", "--console-address", ":9001"]
+
+      portMappings = [
+        {
+          containerPort = 9000
+          protocol      = "tcp"
+        },
+        {
+          containerPort = 9001
+          protocol      = "tcp"
+        }
+      ]
+
+      environment = [
+        { name = "MINIO_ROOT_USER", value = "minioadmin" },
+        { name = "MINIO_ROOT_PASSWORD", value = "minioadmin" },
+        { name = "MINIO_BUCKET_eventsassets", value = "on" },
+        { name = "MINIO_NOTIFY_WEBHOOK_ENABLE_eventsassets", value = "on" },
+        { name = "MINIO_NOTIFY_WEBHOOK_ENDPOINT_eventsassets", value = "http://${var.alb_dns_name}/api/minio/webhook" }
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.minio.id
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "minio"
+        }
+      }
+    },
+  ])
+}
+
 # Backend ECS Service
 resource "aws_ecs_service" "backend" {
   name            = "${var.project}-backend-svc"
@@ -178,5 +236,26 @@ resource "aws_ecs_service" "frontend" {
     target_group_arn = var.frontend_target_group_arn
     container_name   = "frontend"
     container_port   = 80
+  }
+}
+
+# MinIO ECS Service
+resource "aws_ecs_service" "minio" {
+  name            = "${var.project}-minio-svc"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.minio.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = var.private_subnets
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = var.minio_target_group_arn
+    container_name   = "minio"
+    container_port   = 9000
   }
 }

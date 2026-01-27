@@ -1,17 +1,20 @@
 import uuid
 from typing import Annotated, List
 
-import boto3
 from fastapi import APIRouter, Depends, Path, HTTPException, UploadFile
 from pydantic import BaseModel, model_validator, field_validator
 from sqlmodel import Session, select
 
 from backend.events.models import Event
 from backend.reviews.models import Review, ReviewAsset
+from backend.s3 import generate_presigned_url, upload_to_s3
 from backend.session import get_session
-from backend.settings import get_settings
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
+
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 
 class ReviewRead(BaseModel):
@@ -36,7 +39,11 @@ class ReviewCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_text(self):
-        if not any((self.title, self.content)) or len(self.title) <= 5 or len(self.content) <= 5:
+        if (
+            not any((self.title, self.content))
+            or len(self.title) <= 5
+            or len(self.content) <= 5
+        ):
             raise ValueError("title or content too short")
         return self
 
@@ -85,32 +92,17 @@ def get_reviews_for_event(event_id: int, session: Session = Depends(get_session)
     return event.reviews
 
 
-def get_bucket_name() -> str:
-    return get_settings().S3_ASSETS_BUCKET
-
-
-s3 = boto3.client("s3")
-
-
-# todo: consider moving to a dedicated aws module
-def generate_presigned_url(key: str, expires_in: int = 600) -> str:
-    """
-    Generate a pre-signed S3 URL for the given key.
-    expires_in: time in seconds before URL expires
-    """
-    return s3.generate_presigned_url(
-        ClientMethod="get_object", Params={"Bucket": get_bucket_name(), "Key": key}, ExpiresIn=expires_in
-    )
-
-
 @router.post("/{review_id}/assets", response_model=ReviewAssetRead)
-def add_review_asset(review_id: int, asset_data: UploadFile, session: Session = Depends(get_session)):
+def add_review_asset(
+    review_id: int, asset_data: UploadFile, session: Session = Depends(get_session)
+):
     review = session.get(Review, review_id)
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
 
     key = f"{uuid.uuid4()}_{asset_data.filename}"
-    s3.upload_fileobj(asset_data.file, get_bucket_name(), key)
+
+    upload_to_s3(file=asset_data.file, key=key)
 
     asset = ReviewAsset(url=key, review_id=review_id)
     session.add(asset)
@@ -128,7 +120,9 @@ def get_assets_for_review(review_id: int, session: Session = Depends(get_session
     assets_with_urls = []
     for asset in review.assets:
         presigned_url = generate_presigned_url(asset.url)
-        assets_with_urls.append(ReviewAssetRead(id=asset.id, review_id=asset.review_id, url=presigned_url))
+        assets_with_urls.append(
+            ReviewAssetRead(id=asset.id, review_id=asset.review_id, url=presigned_url)
+        )
     return assets_with_urls
 
 
