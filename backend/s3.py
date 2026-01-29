@@ -15,7 +15,7 @@ def get_bucket_name() -> str:
     return bucket
 
 
-s3 = None
+s3: Any = None
 
 
 def get_s3_client():

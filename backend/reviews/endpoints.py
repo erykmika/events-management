@@ -12,10 +12,10 @@ from backend.reviews.models import Review, ReviewAsset
 from backend.s3 import generate_presigned_url, upload_to_s3, get_bucket_name
 from backend.session import get_session
 from backend.settings import get_settings
+from logging import getLogger
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
 
-from logging import getLogger
 
 logger = getLogger(__name__)
 
@@ -109,30 +109,33 @@ def add_review_asset(
     upload_to_s3(file=asset_data.file, key=key)
 
     # Invoke Lambda function to process the image
-    try:
-        lambda_client = boto3.client("lambda")
-        payload = {
-            "Records": [
-                {
-                    "s3": {
-                        "bucket": {"name": get_bucket_name()},
-                        "object": {"key": key},
+    if get_settings().LAMBDA_ARN:
+        try:
+            lambda_client = boto3.client("lambda")
+            payload = {
+                "Records": [
+                    {
+                        "s3": {
+                            "bucket": {"name": get_bucket_name()},
+                            "object": {"key": key},
+                        }
                     }
-                }
-            ]
-        }
-        logger.info(f"Invoking Lambda with payload: {payload}")
-        response = lambda_client.invoke(
-            FunctionName=get_settings().LAMBDA_ARN,
-            InvocationType="Event",
-            Payload=json.dumps(payload),
-        )
-        logger.info(
-            f"Lambda invoked successfully with status code: {response['StatusCode']}"
-        )
-    except Exception as e:
-        logger.error(f"Failed to invoke Lambda: {e}")
-        raise HTTPException(status_code=500, detail="Failed to process image")
+                ]
+            }
+            logger.info(f"Invoking Lambda with payload: {payload}")
+            response = lambda_client.invoke(
+                FunctionName=get_settings().LAMBDA_ARN,
+                InvocationType="Event",
+                Payload=json.dumps(payload),
+            )
+            logger.info(
+                f"Lambda invoked successfully with status code: {response['StatusCode']}"
+            )
+        except Exception as e:
+            logger.error(f"Failed to invoke Lambda: {e}")
+            raise HTTPException(status_code=500, detail="Failed to process image")
+    else:
+        logger.info("Skipping Lambda invocation because LAMBDA_ARN is not configured")
 
     # Store asset record in database
     asset = ReviewAsset(url=key, review_id=review_id)

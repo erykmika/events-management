@@ -4,7 +4,6 @@ from unittest.mock import Mock
 import pytest
 
 import backend.s3
-from backend.reviews import endpoints as review_endpoints
 
 
 @pytest.fixture
