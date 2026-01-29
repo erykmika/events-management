@@ -199,7 +199,8 @@ module "ecs" {
 
   iam_execution_role_arn = var.iam_role_arn
 
-  database_url = module.rds.database_url
+  db_name     = var.db_name
+  db_username = var.db_username
 
   cognito_user_pool_id  = module.cognito.user_pool_id
   cognito_app_client_id = module.cognito.app_client_id
@@ -217,27 +218,6 @@ module "ecs" {
   db_password = var.db_password
 
   logging_level = "INFO"
-}
-
-# RDS Module
-module "rds" {
-  source = "./modules/rds"
-
-  project     = var.project
-  environment = var.environment
-
-  vpc_id          = module.vpc.vpc_id
-  private_subnets = module.vpc.private_subnets
-
-  # Reference ECS SG
-  ecs_tasks_security_group_id = module.ecs.ecs_tasks_security_group_id
-
-  db_name     = var.db_name
-  db_username = var.db_username
-  db_password = var.db_password
-
-  db_instance_class = var.db_instance_class
-  allocated_storage = var.allocated_storage
 }
 
 module "cognito" {

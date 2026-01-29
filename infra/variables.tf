@@ -58,7 +58,7 @@ variable "iam_role_arn" {
   default     = "arn:aws:iam::ACCOUNT_ID:role/LabRole"
 }
 
-# RDS Variables
+# Database Variables
 variable "db_name" {
   description = "Database name"
   type        = string
@@ -76,18 +76,6 @@ variable "db_password" {
   type        = string
   default     = ""
   sensitive   = true
-}
-
-variable "db_instance_class" {
-  description = "RDS instance class"
-  type        = string
-  default     = "db.t3.micro"
-}
-
-variable "allocated_storage" {
-  description = "Allocated storage in GB"
-  type        = number
-  default     = 20
 }
 
 

@@ -89,8 +89,13 @@ variable "iam_execution_role_arn" {
   type        = string
 }
 
-variable "database_url" {
-  description = "Postgres RDS URL"
+variable "db_name" {
+  description = "Postgres database name"
+  type        = string
+}
+
+variable "db_username" {
+  description = "Postgres database username"
   type        = string
 }
 
