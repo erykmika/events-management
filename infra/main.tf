@@ -1,3 +1,6 @@
+# Get current AWS account ID
+data "aws_caller_identity" "current" {}
+
 # VPC Module
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
@@ -118,12 +121,12 @@ module "alb" {
 
       health_check = {
         enabled             = true
-        interval            = 30
-        path                = "/docs"
+        interval            = 20
+        path                = "/health"
         port                = "traffic-port"
-        healthy_threshold   = 3
-        unhealthy_threshold = 3
-        timeout             = 5
+        healthy_threshold   = 2
+        unhealthy_threshold = 5
+        timeout             = 10
         protocol            = "HTTP"
         matcher             = "200-399"
       }
@@ -162,6 +165,17 @@ module "ecr" {
   project     = var.project
 }
 
+# Lambda
+module "lambda" {
+  source = "./modules/lambda"
+  project                  = var.project
+  iam_role_arn             = var.iam_role_arn
+  s3_assets_bucket         = var.s3_assets_bucket
+  minio_endpoint           = "${module.alb.dns_name}:9000"
+  minio_access_key         = var.minio_access_key
+  minio_secret_access_key  = var.minio_secret_access_key
+}
+
 # ECS Module
 module "ecs" {
   source = "./modules/ecs"
@@ -197,6 +211,12 @@ module "ecs" {
 
   minio_access_key = var.minio_access_key
   minio_secret_access_key = var.minio_secret_access_key
+
+  lambda_arn = module.lambda.lambda_function_arn
+
+  db_password = var.db_password
+
+  logging_level = "INFO"
 }
 
 # RDS Module

@@ -22,35 +22,14 @@ resource "aws_lambda_function" "process_images" {
 
   layers = [aws_lambda_layer_version.python_libs.arn]
 
+  role = var.iam_role_arn
+
   environment {
     variables = {
-      BUCKET_NAME = aws_s3_bucket.review_assets.bucket
+      BUCKET_NAME          = var.s3_assets_bucket
+      MINIO_ENDPOINT       = var.minio_endpoint
+      MINIO_ACCESS_KEY     = var.minio_access_key
+      MINIO_SECRET_KEY     = var.minio_secret_access_key
     }
   }
-
-  role = var.iam_role_arn
-}
-
-
-resource "aws_lambda_permission" "allow_s3_invoke" {
-  statement_id  = "AllowS3Invoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.process_images.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = aws_s3_bucket.review_assets.arn
-}
-
-
-resource "aws_s3_bucket_notification" "uploads_notification" {
-  bucket = aws_s3_bucket.review_assets.id
-
-  lambda_function {
-    lambda_function_arn = aws_lambda_function.process_images.arn
-    events              = ["s3:ObjectCreated:*"]
-  }
-
-  depends_on = [
-    aws_lambda_function.process_images,
-    aws_lambda_permission.allow_s3_invoke
-  ]
 }

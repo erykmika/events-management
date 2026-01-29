@@ -128,3 +128,18 @@ variable "minio_secret_access_key" {
   description = "Minio secret access key"
   type = string
 }
+
+variable "lambda_arn" {
+  description = "ARN of the Lambda function to process S3 events"
+  type        = string
+  default     = ""
+}
+
+variable "db_password" {
+  type = string
+}
+
+variable "logging_level" {
+  type = string
+  description = "logging level for FastAPI backend"
+}

@@ -27,6 +27,7 @@ class SettingsDetails(BaseModel):
     MINIO_ACCESS_KEY: str = ""
     MINIO_SECRET_ACCESS_KEY: str = ""
     AWS_REGION: str = ""
+    LAMBDA_ARN: str = ""
 
 
 SETTINGS = {
@@ -43,7 +44,6 @@ SETTINGS = {
 load_dotenv()
 
 _ENV_VAR = "ENVIRONMENT"
-_DB_URL_VAR = "DATABASE_URL"
 
 _env_value = os.getenv(_ENV_VAR)
 _selected_env = Settings.DEVELOPMENT

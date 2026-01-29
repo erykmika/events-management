@@ -4,8 +4,17 @@ import os
 import boto3
 from PIL import Image  # noqa
 
-s3 = boto3.client("s3")
 bucket_name = os.environ["BUCKET_NAME"]
+minio_endpoint = os.environ["MINIO_ENDPOINT"]
+minio_access_key = os.environ["MINIO_ACCESS_KEY"]
+minio_secret_key = os.environ["MINIO_SECRET_KEY"]
+
+s3 = boto3.client(
+    "s3",
+    endpoint_url=f"http://{minio_endpoint}",
+    aws_access_key_id=minio_access_key,
+    aws_secret_access_key=minio_secret_key,
+)
 
 
 def lambda_handler(event, context):
@@ -24,7 +33,9 @@ def lambda_handler(event, context):
         img.save(buffer, format="PNG")
         buffer.seek(0)
 
-        s3.put_object(Bucket=bucket_name, Key=key, Body=buffer, ContentType="image/jpeg")
+        s3.put_object(
+            Bucket=bucket_name, Key=key, Body=buffer, ContentType="image/jpeg"
+        )
         print("Overwritten the original picture with a resized one")
 
     return {"status": "success"}

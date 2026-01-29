@@ -19,6 +19,11 @@ resource "aws_cloudwatch_log_group" "minio" {
   retention_in_days = 7
 }
 
+resource "aws_cloudwatch_log_group" "postgres_db" {
+  name              = "/ecs/${var.project}-postgres_db"
+  retention_in_days = 7
+}
+
 # SG for ECS Tasks
 resource "aws_security_group" "ecs_tasks" {
   name        = "${var.project}-ecs-tasks-sg"
@@ -66,6 +71,8 @@ resource "aws_ecs_task_definition" "backend" {
       ]
 
       environment = [
+        { name = "ENVIRONMENT", value = var.environment },
+        { name = "LOGGING_LEVEL", value = var.logging_level },
         { name = "DATABASE_URL", value = var.database_url },
         { name = "COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id },
         { name = "COGNITO_APP_CLIENT_ID", value = var.cognito_app_client_id },
@@ -74,6 +81,7 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "MINIO_ENDPOINT", value = "${var.alb_dns_name}:9000" },
         { name = "MINIO_ACCESS_KEY", value = var.minio_access_key },
         { name = "MINIO_SECRET_ACCESS_KEY", value = var.minio_secret_access_key },
+        { name = "LAMBDA_ARN", value = var.lambda_arn },
         { name = "AWS_REGION", value = var.aws_region },
       ]
 
@@ -86,13 +94,6 @@ resource "aws_ecs_task_definition" "backend" {
         }
       }
 
-      healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:8000/docs || exit 1"]
-        interval    = 30
-        timeout     = 5
-        retries     = 3
-        startPeriod = 60
-      }
     }
   ])
 }
@@ -180,7 +181,6 @@ resource "aws_ecs_task_definition" "minio" {
       environment = [
         { name = "MINIO_ROOT_USER", value = "minioadmin" },
         { name = "MINIO_ROOT_PASSWORD", value = "minioadmin" },
-        { name = "MINIO_BUCKET_eventsassets", value = "on" },
         { name = "MINIO_NOTIFY_WEBHOOK_ENABLE_eventsassets", value = "on" },
         { name = "MINIO_NOTIFY_WEBHOOK_ENDPOINT_eventsassets", value = "http://${var.alb_dns_name}/api/minio/webhook" }
       ]
@@ -258,4 +258,60 @@ resource "aws_ecs_service" "minio" {
     container_name   = "minio"
     container_port   = 9000
   }
+}
+
+
+# Postgres service
+resource "aws_ecs_service" "postgres_db" {
+  name            = "${var.project}-postgres-db"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.postgres_db.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = var.private_subnets
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = false
+  }
+}
+
+
+# Postgres Task Definition
+resource "aws_ecs_task_definition" "postgres_db" {
+  family                   = "${var.project}-postgres_db"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "512"
+  memory                   = "1024"
+  execution_role_arn       = var.iam_execution_role_arn
+  task_role_arn            = var.iam_execution_role_arn
+
+  container_definitions = jsonencode([
+    {
+      name  = "postgres_db"
+      image = "docker.io/postgres:latest"
+      essential = true
+
+      portMappings = [
+        {
+          containerPort = 5432
+          protocol      = "tcp"
+        },
+      ]
+
+      environment = [
+        { name = "POSTGRES_PASSWORD", value = var.db_password },
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.postgres_db.id
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "postgres_db"
+        }
+      }
+    },
+  ])
 }

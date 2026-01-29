@@ -13,7 +13,7 @@ variable "project" {
 variable "environment" {
   description = "Environment name"
   type        = string
-  default     = "dev"
+  default     = "PRODUCTION"
 }
 
 variable "vpc_cidr" {
@@ -112,4 +112,10 @@ variable "minio_secret_access_key" {
   description = "Minio secret access key"
   type = string
   default = "minioadmin"
+}
+
+variable "s3_assets_bucket" {
+  description = "S3 bucket name for assets"
+  type        = string
+  default     = "eventsassets"
 }

@@ -1,14 +1,17 @@
 import uuid
+import json
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, Path, HTTPException, UploadFile
 from pydantic import BaseModel, model_validator, field_validator
 from sqlmodel import Session, select
+import boto3
 
 from backend.events.models import Event
 from backend.reviews.models import Review, ReviewAsset
-from backend.s3 import generate_presigned_url, upload_to_s3
+from backend.s3 import generate_presigned_url, upload_to_s3, get_bucket_name
 from backend.session import get_session
+from backend.settings import get_settings
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
 
@@ -102,8 +105,36 @@ def add_review_asset(
 
     key = f"{uuid.uuid4()}_{asset_data.filename}"
 
+    # Upload to S3
     upload_to_s3(file=asset_data.file, key=key)
 
+    # Invoke Lambda function to process the image
+    try:
+        lambda_client = boto3.client("lambda")
+        payload = {
+            "Records": [
+                {
+                    "s3": {
+                        "bucket": {"name": get_bucket_name()},
+                        "object": {"key": key},
+                    }
+                }
+            ]
+        }
+        logger.info(f"Invoking Lambda with payload: {payload}")
+        response = lambda_client.invoke(
+            FunctionName=get_settings().LAMBDA_ARN,
+            InvocationType="Event",
+            Payload=json.dumps(payload),
+        )
+        logger.info(
+            f"Lambda invoked successfully with status code: {response['StatusCode']}"
+        )
+    except Exception as e:
+        logger.error(f"Failed to invoke Lambda: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process image")
+
+    # Store asset record in database
     asset = ReviewAsset(url=key, review_id=review_id)
     session.add(asset)
     session.commit()

@@ -1,7 +1,5 @@
 from logging import getLogger
 from typing import Any
-import os
-
 import boto3
 from botocore.exceptions import ClientError
 
