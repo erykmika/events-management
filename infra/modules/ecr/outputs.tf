@@ -17,3 +17,4 @@ output "backend_repository_arn" {
   description = "Backend ECR repository ARN"
   value       = aws_ecr_repository.backend.arn
 }
+

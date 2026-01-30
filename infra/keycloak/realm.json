@@ -1,0 +1,38 @@
+{
+    "realm": "events",
+    "enabled": true,
+    "registrationAllowed": false,
+    "sslRequired": "none",
+    "accessTokenLifespan": 86400,
+    "clients": [
+        {
+            "clientId": "events-frontend",
+            "name": "Events Frontend",
+            "publicClient": true,
+            "protocol": "openid-connect",
+            "redirectUris": ["*"],
+            "webOrigins": ["*"],
+            "directAccessGrantsEnabled": true,
+            "standardFlowEnabled": false,
+            "implicitFlowEnabled": false
+        }
+    ],
+    "users": [
+        {
+            "username": "demo",
+            "enabled": true,
+            "emailVerified": true,
+            "email": "demo@example.com",
+            "firstName": "Demo",
+            "lastName": "User",
+            "requiredActions": [],
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "Password123!",
+                    "temporary": false
+                }
+            ]
+        }
+    ]
+}

@@ -75,6 +75,18 @@ module "alb" {
             }
           }]
         }
+        keycloak = {
+          priority = 20
+          actions = [{
+            type             = "forward"
+            target_group_key = "keycloak"
+          }]
+          conditions = [{
+            path_pattern = {
+              values = ["/auth/*"]
+            }
+          }]
+        }
       }
     }
     minio = {
@@ -156,6 +168,29 @@ module "alb" {
 
       create_attachment = false
     }
+
+    keycloak = {
+      name_prefix                       = "kc-"
+      protocol                          = "HTTP"
+      port                              = 8080
+      target_type                       = "ip"
+      deregistration_delay              = 30
+      load_balancing_cross_zone_enabled = true
+
+      health_check = {
+        enabled             = true
+        interval            = 30
+        path                = "/auth"
+        port                = "traffic-port"
+        healthy_threshold   = 2
+        unhealthy_threshold = 5
+        timeout             = 10
+        protocol            = "HTTP"
+        matcher             = "200-499"
+      }
+
+      create_attachment = false
+    }
   }
 }
 
@@ -202,9 +237,10 @@ module "ecs" {
   db_name     = var.db_name
   db_username = var.db_username
 
-  cognito_user_pool_id  = module.cognito.user_pool_id
-  cognito_app_client_id = module.cognito.app_client_id
-  cognito_jwks_url      = module.cognito.jwks_url
+  keycloak_base_url     = "http://${module.alb.dns_name}/auth"
+  keycloak_realm        = "events"
+  keycloak_client_id    = "events-frontend"
+  keycloak_jwks_url     = "http://${module.alb.dns_name}/auth/realms/events/protocol/openid-connect/certs"
 
   alb_dns_name = module.alb.dns_name
 
@@ -220,10 +256,16 @@ module "ecs" {
   logging_level = "INFO"
 }
 
-module "cognito" {
-  source = "./modules/cognito"
+module "keycloak" {
+  source = "./modules/keycloak"
 
-  aws_region            = var.aws_region
-  project               = var.project
-  default_user_password = var.default_user_password
+  project                    = var.project
+  aws_region                 = var.aws_region
+  cluster_id                 = module.ecs.cluster_id
+  ecs_tasks_security_group_id= module.ecs.ecs_tasks_security_group_id
+  private_subnets            = module.vpc.private_subnets
+  iam_execution_role_arn     = var.iam_role_arn
+  keycloak_target_group_arn  = module.alb.target_groups["keycloak"].arn
+  realm_json_b64             = filebase64("${path.root}/keycloak/realm.json")
+  alb_dns_name               = module.alb.dns_name
 }

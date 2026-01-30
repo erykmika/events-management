@@ -8,7 +8,7 @@ from backend.settings import get_settings
 
 def get_jwks():
     settings = get_settings()
-    jwks = requests.get(settings.COGNITO_JWKS_URL).json()
+    jwks = requests.get(settings.KEYCLOAK_JWKS_URL).json()
     return {key["kid"]: key for key in jwks["keys"]}
 
 
@@ -16,7 +16,7 @@ security = HTTPBearer()
 
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Verify JWT token using AWS Cognito auth provider"""
+    """Verify JWT token using Keycloak (OIDC) provider"""
     settings = get_settings()
     token = credentials.credentials
     try:
@@ -29,7 +29,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
             token,
             key,
             algorithms=[headers["alg"]],
-            audience=settings.COGNITO_APP_CLIENT_ID,
+            audience=settings.KEYCLOAK_CLIENT_ID,
         )
         return payload
     except JWTError:

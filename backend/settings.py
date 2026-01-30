@@ -19,9 +19,8 @@ class Settings(StrEnum):
 class SettingsDetails(BaseModel):
     LOGGING_LEVEL: str = "INFO"
     DATABASE_URL: str
-    COGNITO_USER_POOL_ID: str = ""
-    COGNITO_APP_CLIENT_ID: str = ""
-    COGNITO_JWKS_URL: str = ""
+    KEYCLOAK_CLIENT_ID: str = ""
+    KEYCLOAK_JWKS_URL: str = ""
     S3_ASSETS_BUCKET: str = ""
     MINIO_ENDPOINT: str = ""
     MINIO_ACCESS_KEY: str = ""

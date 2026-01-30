@@ -99,18 +99,24 @@ variable "db_username" {
   type        = string
 }
 
-variable "cognito_user_pool_id" {
-  description = "Cognito user pool ID"
+variable "keycloak_base_url" {
+  description = "Base URL for Keycloak (including relative path)"
   type        = string
 }
 
-variable "cognito_app_client_id" {
-  description = "Cognito app client ID"
+variable "keycloak_realm" {
+  description = "Keycloak realm name"
+  type        = string
+  default     = "events"
+}
+
+variable "keycloak_client_id" {
+  description = "Keycloak client id used by frontend"
   type        = string
 }
 
-variable "cognito_jwks_url" {
-  description = "Cognito JWKS URL"
+variable "keycloak_jwks_url" {
+  description = "Keycloak JWKS URL"
   type        = string
 }
 

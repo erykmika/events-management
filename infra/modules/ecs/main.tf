@@ -74,9 +74,8 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "ENVIRONMENT", value = var.environment },
         { name = "LOGGING_LEVEL", value = var.logging_level },
         { name = "DATABASE_URL", value = "postgresql://${var.db_username}:${var.db_password}@127.0.0.1:5432/${var.db_name}" },
-        { name = "COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id },
-        { name = "COGNITO_APP_CLIENT_ID", value = var.cognito_app_client_id },
-        { name = "COGNITO_JWKS_URL", value = var.cognito_jwks_url },
+        { name = "KEYCLOAK_CLIENT_ID", value = var.keycloak_client_id },
+        { name = "KEYCLOAK_JWKS_URL", value = var.keycloak_jwks_url },
         { name = "S3_ASSETS_BUCKET", value = "eventsassets" },
         { name = "MINIO_ENDPOINT", value = "${var.alb_dns_name}:9000" },
         { name = "MINIO_ACCESS_KEY", value = var.minio_access_key },
@@ -149,9 +148,9 @@ resource "aws_ecs_task_definition" "frontend" {
 
       environment = [
         { name = "API_URL", value = "http://${var.alb_dns_name}/api" },
-        { name = "COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id },
-        { name = "COGNITO_APP_CLIENT_ID", value = var.cognito_app_client_id },
-        { name = "AWS_REGION", value = var.aws_region }
+        { name = "KEYCLOAK_BASE_URL", value = var.keycloak_base_url },
+        { name = "KEYCLOAK_REALM", value = var.keycloak_realm },
+        { name = "KEYCLOAK_CLIENT_ID", value = var.keycloak_client_id }
       ]
 
 

@@ -107,3 +107,9 @@ variable "s3_assets_bucket" {
   type        = string
   default     = "eventsassets"
 }
+
+variable "minio_endpoint" {
+  description = "Minio endpoint (unused; declared to align with terraform.tfvars)"
+  type        = string
+  default     = ""
+}
