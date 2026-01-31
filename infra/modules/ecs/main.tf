@@ -24,6 +24,17 @@ resource "aws_cloudwatch_log_group" "postgres_db" {
   retention_in_days = 7
 }
 
+# Monitoring Log Groups
+resource "aws_cloudwatch_log_group" "grafana" {
+  name              = "/ecs/${var.project}-grafana"
+  retention_in_days = 7
+}
+
+resource "aws_cloudwatch_log_group" "prometheus" {
+  name              = "/ecs/${var.project}-prometheus"
+  retention_in_days = 7
+}
+
 # SG for ECS Tasks
 resource "aws_security_group" "ecs_tasks" {
   name        = "${var.project}-ecs-tasks-sg"
@@ -222,6 +233,119 @@ resource "aws_ecs_task_definition" "minio" {
   ])
 }
 
+# Grafana Task Definition
+resource "aws_ecs_task_definition" "grafana" {
+  family                   = "${var.project}-grafana"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = var.grafana_cpu
+  memory                   = var.grafana_memory
+  execution_role_arn       = var.iam_execution_role_arn
+  task_role_arn            = var.iam_execution_role_arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "grafana"
+      image     = "grafana/grafana:latest"
+      essential = true
+
+      portMappings = [
+        {
+          containerPort = 3000
+          protocol      = "tcp"
+        }
+      ]
+
+      environment = [
+        { name = "GF_SECURITY_ADMIN_USER", value = "admin" },
+        { name = "GF_SECURITY_ADMIN_PASSWORD", value = "admin" }
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.grafana.id
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "grafana"
+        }
+      }
+    }
+  ])
+}
+
+resource "aws_ecs_task_definition" "prometheus" {
+  family                   = "${var.project}-prometheus"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = var.prometheus_cpu
+  memory                   = var.prometheus_memory
+  execution_role_arn       = var.iam_execution_role_arn
+  task_role_arn            = var.iam_execution_role_arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "prometheus"
+      image     = "prom/prometheus:latest"
+      essential = true
+
+      portMappings = [
+        {
+          containerPort = 9090
+          protocol      = "tcp"
+        }
+      ]
+
+      command = [
+        "--config.file=/etc/prometheus/prometheus.yml"
+      ]
+
+      mountPoints = [
+        {
+          sourceVolume  = "prom-config"
+          containerPath = "/etc/prometheus"
+          readOnly      = false
+        }
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.prometheus.id
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "prometheus"
+        }
+      }
+    },
+    {
+      name      = "config-writer"
+      image     = "busybox:latest"
+      essential = false
+
+      environment = [
+        { name = "ALB_DNS_NAME", value = var.alb_dns_name }
+      ]
+
+      command = [
+        "sh",
+        "-c",
+        "printf \"global:\\n  scrape_interval: 15s\\nscrape_configs:\\n  - job_name: 'backend'\\n    metrics_path: /metrics\\n    static_configs:\\n      - targets: ['$ALB_DNS_NAME:80']\\n\" > /etc/prometheus/prometheus.yml && sleep 3600"
+      ]
+
+      mountPoints = [
+        {
+          sourceVolume  = "prom-config"
+          containerPath = "/etc/prometheus"
+          readOnly      = false
+        }
+      ]
+    }
+  ])
+
+  volume {
+    name = "prom-config"
+  }
+}
+
 # Backend ECS Service
 resource "aws_ecs_service" "backend" {
   name            = "${var.project}-backend-svc"
@@ -285,5 +409,44 @@ resource "aws_ecs_service" "minio" {
   }
 }
 
+# Grafana ECS Service
+resource "aws_ecs_service" "grafana" {
+  name            = "${var.project}-grafana-svc"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.grafana.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
 
-# Postgres service
+  network_configuration {
+    subnets          = var.private_subnets
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = var.grafana_target_group_arn
+    container_name   = "grafana"
+    container_port   = 3000
+  }
+}
+
+# Prometheus ECS Service
+resource "aws_ecs_service" "prometheus" {
+  name            = "${var.project}-prometheus-svc"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.prometheus.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = var.private_subnets
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = var.prometheus_target_group_arn
+    container_name   = "prometheus"
+    container_port   = 9090
+  }
+}

@@ -130,6 +130,16 @@ variable "minio_target_group_arn" {
   type        = string
 }
 
+variable "grafana_target_group_arn" {
+  description = "Grafana target group ARN"
+  type        = string
+}
+
+variable "prometheus_target_group_arn" {
+  description = "Prometheus target group ARN"
+  type        = string
+}
+
 variable "minio_access_key" {
   description = "Minio access key"
   type = string
@@ -153,4 +163,28 @@ variable "db_password" {
 variable "logging_level" {
   type = string
   description = "logging level for FastAPI backend"
+}
+
+variable "grafana_cpu" {
+  description = "CPU for grafana task"
+  type        = string
+  default     = "256"
+}
+
+variable "grafana_memory" {
+  description = "Memory for grafana task"
+  type        = string
+  default     = "512"
+}
+
+variable "prometheus_cpu" {
+  description = "CPU for prometheus task"
+  type        = string
+  default     = "256"
+}
+
+variable "prometheus_memory" {
+  description = "Memory for prometheus task"
+  type        = string
+  default     = "512"
 }

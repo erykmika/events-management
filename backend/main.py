@@ -3,6 +3,7 @@ import logging
 from starlette.middleware.cors import CORSMiddleware
 
 from backend.settings import get_settings
+from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi import FastAPI, APIRouter, Depends
 
 from .auth import verify_token
@@ -20,6 +21,9 @@ api_router.include_router(events_router)
 api_router.include_router(reviews_router)
 
 app.include_router(api_router)
+
+# expose Prometheus metrics at /metrics
+Instrumentator().instrument(app).expose(app)
 
 app.add_middleware(
     CORSMiddleware,

@@ -45,6 +45,18 @@ module "alb" {
       ip_protocol = "tcp"
       cidr_ipv4   = "0.0.0.0/0"
     }
+    all_grafana = {
+      from_port   = 3000
+      to_port     = 3000
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+    all_prometheus = {
+      from_port   = 9090
+      to_port     = 9090
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
   }
   security_group_egress_rules = {
     all = {
@@ -75,6 +87,18 @@ module "alb" {
             }
           }]
         }
+        metrics = {
+          priority = 11
+          actions = [{
+            type             = "forward"
+            target_group_key = "backend"
+          }]
+          conditions = [{
+            path_pattern = {
+              values = ["/metrics"]
+            }
+          }]
+        }
         keycloak = {
           priority = 20
           actions = [{
@@ -95,6 +119,22 @@ module "alb" {
 
       forward = {
         target_group_key = "minio"
+      }
+    }
+    grafana = {
+      port     = 3000
+      protocol = "HTTP"
+
+      forward = {
+        target_group_key = "grafana"
+      }
+    }
+    prometheus = {
+      port     = 9090
+      protocol = "HTTP"
+
+      forward = {
+        target_group_key = "prometheus"
       }
     }
   }
@@ -158,6 +198,52 @@ module "alb" {
         enabled             = true
         interval            = 30
         path                = "/minio/health/ready"
+        port                = "traffic-port"
+        healthy_threshold   = 3
+        unhealthy_threshold = 3
+        timeout             = 5
+        protocol            = "HTTP"
+        matcher             = "200-399"
+      }
+
+      create_attachment = false
+    }
+
+    grafana = {
+      name_prefix                       = "gr-"
+      protocol                          = "HTTP"
+      port                              = 3000
+      target_type                       = "ip"
+      deregistration_delay              = 30
+      load_balancing_cross_zone_enabled = true
+
+      health_check = {
+        enabled             = true
+        interval            = 30
+        path                = "/login"
+        port                = "traffic-port"
+        healthy_threshold   = 3
+        unhealthy_threshold = 3
+        timeout             = 5
+        protocol            = "HTTP"
+        matcher             = "200-399"
+      }
+
+      create_attachment = false
+    }
+
+    prometheus = {
+      name_prefix                       = "pr-"
+      protocol                          = "HTTP"
+      port                              = 9090
+      target_type                       = "ip"
+      deregistration_delay              = 30
+      load_balancing_cross_zone_enabled = true
+
+      health_check = {
+        enabled             = true
+        interval            = 30
+        path                = "/"
         port                = "traffic-port"
         healthy_threshold   = 3
         unhealthy_threshold = 3
@@ -245,6 +331,9 @@ module "ecs" {
   alb_dns_name = module.alb.dns_name
 
   minio_target_group_arn = module.alb.target_groups["minio"].arn
+
+  grafana_target_group_arn    = module.alb.target_groups["grafana"].arn
+  prometheus_target_group_arn = module.alb.target_groups["prometheus"].arn
 
   minio_access_key = var.minio_access_key
   minio_secret_access_key = var.minio_secret_access_key
