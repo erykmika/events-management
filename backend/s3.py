@@ -58,7 +58,15 @@ def upload_to_s3(file: Any, key: str, bucket: str = get_bucket_name()) -> None:
     get_s3_client().upload_fileobj(file, bucket, key)
 
 
-lambda_client = boto3.client("lambda")
+lambda_client = None
+
+
+def get_lambda_client():
+    global lambda_client
+    if lambda_client is None:
+        lambda_client = boto3.client("lambda")
+    return lambda_client
+
 
 def invoke_image_processing_lambda(bucket_name: str, key: str) -> None:
     payload = {
@@ -72,11 +80,9 @@ def invoke_image_processing_lambda(bucket_name: str, key: str) -> None:
         ]
     }
     logger.info(f"Invoking Lambda with payload: {payload}")
-    response = lambda_client.invoke(
+    response = get_lambda_client().invoke(
         FunctionName=get_settings().LAMBDA_ARN,
         InvocationType="Event",
         Payload=json.dumps(payload),
     )
-    logger.info(
-        f"Lambda invoked successfully with status code: {response['StatusCode']}"
-    )
+    logger.info(f"Lambda invoked successfully with status code: {response['StatusCode']}")

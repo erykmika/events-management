@@ -52,17 +52,13 @@ if _env_value:
 else:
     _selected_env = Settings.DEVELOPMENT
 
-CURRENT_SETTINGS: SettingsDetails = SETTINGS.get(
-    _selected_env, SETTINGS[Settings.DEVELOPMENT]
-)  # noqa
+CURRENT_SETTINGS: SettingsDetails = SETTINGS.get(_selected_env, SETTINGS[Settings.DEVELOPMENT])  # noqa
 
 # optionally override `CURRENT_SETTINGS` attributes with the values given in env
 for setting in CURRENT_SETTINGS.model_dump().keys():
     env_value = os.getenv(setting)
     if env_value is not None:
-        logger.info(
-            f"Using env-provided value of {setting}={str(env_value)[:5]}***{str(env_value)[-5:]}"
-        )
+        logger.info(f"Using env-provided value of {setting}={str(env_value)[:5]}***{str(env_value)[-5:]}")
         setattr(CURRENT_SETTINGS, setting, env_value)
 
 

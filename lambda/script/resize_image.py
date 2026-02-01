@@ -33,9 +33,7 @@ def lambda_handler(event, context):
         img.save(buffer, format="PNG")
         buffer.seek(0)
 
-        s3.put_object(
-            Bucket=bucket_name, Key=key, Body=buffer, ContentType="image/jpeg"
-        )
+        s3.put_object(Bucket=bucket_name, Key=key, Body=buffer, ContentType="image/jpeg")
         print("Overwritten the original picture with a resized one")
 
     return {"status": "success"}

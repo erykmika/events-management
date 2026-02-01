@@ -39,11 +39,7 @@ class ReviewCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_text(self):
-        if (
-            not any((self.title, self.content))
-            or len(self.title) <= 5
-            or len(self.content) <= 5
-        ):
+        if not any((self.title, self.content)) or len(self.title) <= 5 or len(self.content) <= 5:
             raise ValueError("title or content too short")
         return self
 
@@ -93,9 +89,7 @@ def get_reviews_for_event(event_id: int, session: Session = Depends(get_session)
 
 
 @router.post("/{review_id}/assets", response_model=ReviewAssetRead)
-def add_review_asset(
-    review_id: int, asset_data: UploadFile, session: Session = Depends(get_session)
-):
+def add_review_asset(review_id: int, asset_data: UploadFile, session: Session = Depends(get_session)):
     review = session.get(Review, review_id)
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
@@ -106,7 +100,7 @@ def add_review_asset(
     upload_to_s3(file=asset_data.file, key=key)
     try:
         invoke_image_processing_lambda(bucket_name=get_bucket_name(), key=key)
-    except Exception as e: # noqa
+    except Exception as e:  # noqa
         logger.error(e)
         raise HTTPException(status_code=500, detail="error while invoking lambda")
 
@@ -127,9 +121,7 @@ def get_assets_for_review(review_id: int, session: Session = Depends(get_session
     assets_with_urls = []
     for asset in review.assets:
         presigned_url = generate_presigned_url(asset.url)
-        assets_with_urls.append(
-            ReviewAssetRead(id=asset.id, review_id=asset.review_id, url=presigned_url)
-        )
+        assets_with_urls.append(ReviewAssetRead(id=asset.id, review_id=asset.review_id, url=presigned_url))
     return assets_with_urls
 
 
