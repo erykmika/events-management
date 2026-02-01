@@ -33,11 +33,6 @@ variable "keycloak_target_group_arn" {
   type        = string
 }
 
-variable "keycloak_ecr_url" {
-  type        = string
-  default     = ""
-}
-
 variable "realm_json_b64" {
   description = "Base64-encoded Keycloak realm JSON to import"
   type        = string

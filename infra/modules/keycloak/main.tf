@@ -17,7 +17,7 @@ resource "aws_ecs_task_definition" "keycloak" {
   container_definitions = jsonencode([
     {
       name      = "keycloak"
-      image     = "quay.io/keycloak/keycloak:25.0"
+      image     = "quay.io/keycloak/keycloak:latest"
       essential = true
       portMappings = [
         {
