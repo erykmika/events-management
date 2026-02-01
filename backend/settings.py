@@ -1,12 +1,10 @@
-import logging
+import os
 from enum import StrEnum, auto
 from logging import getLogger
 
-from pydantic import BaseModel
-import os
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
-logging.basicConfig(level=logging.DEBUG)
 logger = getLogger(__name__)
 
 
