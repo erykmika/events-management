@@ -4,6 +4,7 @@ from unittest.mock import Mock
 import pytest
 
 import backend.s3
+import backend.reviews.endpoints
 
 
 @pytest.fixture
@@ -42,6 +43,7 @@ def test_add_and_get_review_asset(test_client, event_and_review):
     client, _ = test_client
     _, review = event_and_review
 
+    backend.reviews.endpoints.invoke_image_processing_lambda = Mock()
     backend.s3.s3.upload_fileobj = Mock()
     backend.s3.generate_presigned_url = Mock(return_value="xyz")
     # Create asset

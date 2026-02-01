@@ -100,7 +100,7 @@ variable "db_username" {
 }
 
 variable "keycloak_base_url" {
-  description = "Base URL for Keycloak (including relative path)"
+  description = "Base Keycloak URL"
   type        = string
 }
 

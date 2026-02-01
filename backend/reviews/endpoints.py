@@ -1,17 +1,14 @@
 import uuid
-import json
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, Path, HTTPException, UploadFile
 from pydantic import BaseModel, model_validator, field_validator
 from sqlmodel import Session, select
-import boto3
 
 from backend.events.models import Event
 from backend.reviews.models import Review, ReviewAsset
-from backend.s3 import generate_presigned_url, upload_to_s3, get_bucket_name
+from backend.s3 import generate_presigned_url, upload_to_s3, get_bucket_name, invoke_image_processing_lambda
 from backend.session import get_session
-from backend.settings import get_settings
 from logging import getLogger
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
@@ -105,37 +102,13 @@ def add_review_asset(
 
     key = f"{uuid.uuid4()}_{asset_data.filename}"
 
-    # Upload to S3
+    # Upload to S3 and invoke lambda on uploaded file
     upload_to_s3(file=asset_data.file, key=key)
-
-    # Invoke Lambda function to process the image
-    if get_settings().LAMBDA_ARN:
-        try:
-            lambda_client = boto3.client("lambda")
-            payload = {
-                "Records": [
-                    {
-                        "s3": {
-                            "bucket": {"name": get_bucket_name()},
-                            "object": {"key": key},
-                        }
-                    }
-                ]
-            }
-            logger.info(f"Invoking Lambda with payload: {payload}")
-            response = lambda_client.invoke(
-                FunctionName=get_settings().LAMBDA_ARN,
-                InvocationType="Event",
-                Payload=json.dumps(payload),
-            )
-            logger.info(
-                f"Lambda invoked successfully with status code: {response['StatusCode']}"
-            )
-        except Exception as e:
-            logger.error(f"Failed to invoke Lambda: {e}")
-            raise HTTPException(status_code=500, detail="Failed to process image")
-    else:
-        logger.info("Skipping Lambda invocation because LAMBDA_ARN is not configured")
+    try:
+        invoke_image_processing_lambda(bucket_name=get_bucket_name(), key=key)
+    except Exception as e: # noqa
+        logger.error(e)
+        raise HTTPException(status_code=500, detail="error while invoking lambda")
 
     # Store asset record in database
     asset = ReviewAsset(url=key, review_id=review_id)

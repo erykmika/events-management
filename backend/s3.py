@@ -1,3 +1,4 @@
+import json
 from logging import getLogger
 from typing import Any
 import boto3
@@ -22,6 +23,7 @@ def get_s3_client():
     global s3
     if s3 is None:
         settings = get_settings()
+        # noinspection HttpUrlsUsage
         s3 = boto3.client(
             "s3",
             endpoint_url=f"http://{settings.MINIO_ENDPOINT}",
@@ -44,7 +46,7 @@ def generate_presigned_url(key: str, expires_in: int = 600) -> str:
     )
 
 
-def upload_to_s3(file: Any, key: str, bucket: str = get_bucket_name()):
+def upload_to_s3(file: Any, key: str, bucket: str = get_bucket_name()) -> None:
     try:
         logger.info("Checking if bucket exists")
         get_s3_client().head_bucket(Bucket=bucket)
@@ -54,3 +56,27 @@ def upload_to_s3(file: Any, key: str, bucket: str = get_bucket_name()):
 
     logger.info(f"Sending file to bucket={bucket}, key={key}")
     get_s3_client().upload_fileobj(file, bucket, key)
+
+
+lambda_client = boto3.client("lambda")
+
+def invoke_image_processing_lambda(bucket_name: str, key: str) -> None:
+    payload = {
+        "Records": [
+            {
+                "s3": {
+                    "bucket": {"name": bucket_name},
+                    "object": {"key": key},
+                }
+            }
+        ]
+    }
+    logger.info(f"Invoking Lambda with payload: {payload}")
+    response = lambda_client.invoke(
+        FunctionName=get_settings().LAMBDA_ARN,
+        InvocationType="Event",
+        Payload=json.dumps(payload),
+    )
+    logger.info(
+        f"Lambda invoked successfully with status code: {response['StatusCode']}"
+    )

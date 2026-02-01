@@ -16,7 +16,7 @@ security = HTTPBearer()
 
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Verify JWT token using Keycloak (OIDC) provider"""
+    """Verify JWT token using Keycloak provider"""
     settings = get_settings()
     token = credentials.credentials
     try:
