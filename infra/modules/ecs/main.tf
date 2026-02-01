@@ -201,24 +201,18 @@ resource "aws_ecs_task_definition" "minio" {
       image = "minio/minio:latest"
       essential = true
 
-      command = ["minio", "server", "/data", "--console-address", ":9001"]
+      command = ["minio", "server", "/data"]
 
       portMappings = [
         {
           containerPort = 9000
-          protocol      = "tcp"
-        },
-        {
-          containerPort = 9001
           protocol      = "tcp"
         }
       ]
 
       environment = [
         { name = "MINIO_ROOT_USER", value = "minioadmin" },
-        { name = "MINIO_ROOT_PASSWORD", value = "minioadmin" },
-        { name = "MINIO_NOTIFY_WEBHOOK_ENABLE_eventsassets", value = "on" },
-        { name = "MINIO_NOTIFY_WEBHOOK_ENDPOINT_eventsassets", value = "http://${var.alb_dns_name}/api/minio/webhook" }
+        { name = "MINIO_ROOT_PASSWORD", value = "minioadmin" }
       ]
 
       logConfiguration = {
